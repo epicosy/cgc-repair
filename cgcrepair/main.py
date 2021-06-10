@@ -27,6 +27,7 @@ class CGCRepair(App):
 
         # load additional framework extensions
         extensions = [
+            'cgcrepair.ext.hooks.init',
             'colorlog',
             'jinja2',
         ]

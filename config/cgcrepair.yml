@@ -35,6 +35,9 @@ cgcrepair:
   plots: './plots'
   working_dir: '/tmp'
 
+### Parsing
+  cwe_level: 3
+
 
 log.colorlog:
 

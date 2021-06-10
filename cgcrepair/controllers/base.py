@@ -47,6 +47,6 @@ class Base(Controller):
     def command1(self):
         """Example sub-command."""
 
-        commands_handler = self.app.handler.get('commands', 'commands', setup=True)
-        out, err, dur = commands_handler(cmd_str='ping www.google.com', msg='test command', timeout=5)
-        self.app.log.warning(dur)
+        #commands_handler = self.app.handler.get('commands', 'commands', setup=True)
+        #out, err, dur = commands_handler(cmd_str='ping www.google.com', msg='test command', timeout=5)
+        self.app.log.fatal(self.app.metadata)
