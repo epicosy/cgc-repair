@@ -6,7 +6,8 @@ from cement.core.exc import CaughtSignal
 from .controllers.base import Base
 from .core.exc import CGCRepairError
 from cgcrepair.core.handlers.configurations import YamlConfigurations
-
+from cgcrepair.core.handlers.commands import CommandsHandler
+from cgcrepair.core.interfaces import CommandsInterface
 
 ROOT_DIR = dirname(dirname(__file__))
 
@@ -19,6 +20,10 @@ class CGCRepair(App):
 
         # call sys.exit() on close
         exit_on_close = True
+
+        interfaces = [
+            CommandsInterface,
+        ]
 
         # load additional framework extensions
         extensions = [
@@ -44,7 +49,7 @@ class CGCRepair(App):
 
         # register handlers
         handlers = [
-            Base, YamlConfigurations
+            Base, YamlConfigurations, CommandsHandler
         ]
 
 
