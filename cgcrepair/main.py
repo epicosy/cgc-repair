@@ -1,12 +1,14 @@
+from os.path import dirname
 
-from cement import App, TestApp, init_defaults
+from cement import App, TestApp
 from cement.core.exc import CaughtSignal
-from .core.exc import CGCRepairError
-from .controllers.base import Base
 
-# configuration defaults
-CONFIG = init_defaults('cgcrepair')
-CONFIG['cgcrepair']['foo'] = 'bar'
+from .controllers.base import Base
+from .core.exc import CGCRepairError
+from cgcrepair.core.handlers.configurations import YamlConfigurations
+
+
+ROOT_DIR = dirname(dirname(__file__))
 
 
 class CGCRepair(App):
@@ -15,21 +17,21 @@ class CGCRepair(App):
     class Meta:
         label = 'cgcrepair'
 
-        # configuration defaults
-        config_defaults = CONFIG
-
         # call sys.exit() on close
         exit_on_close = True
 
         # load additional framework extensions
         extensions = [
-            'yaml',
             'colorlog',
             'jinja2',
         ]
 
+        config_defaults = {'root': ROOT_DIR}
+
         # configuration handler
-        config_handler = 'yaml'
+        config_handler = 'yaml_configurations'
+
+        config_dirs = [f'{ROOT_DIR}/config']
 
         # configuration file suffix
         config_file_suffix = '.yml'
@@ -42,11 +44,11 @@ class CGCRepair(App):
 
         # register handlers
         handlers = [
-            Base
+            Base, YamlConfigurations
         ]
 
 
-class CGCRepairTest(TestApp,CGCRepair):
+class CGCRepairTest(TestApp, CGCRepair):
     """A sub-class of CGCRepair that is better suited for testing."""
 
     class Meta:
@@ -56,6 +58,7 @@ class CGCRepairTest(TestApp,CGCRepair):
 def main():
     with CGCRepair() as app:
         try:
+            # app.config.validate()
             app.run()
 
         except AssertionError as e:
