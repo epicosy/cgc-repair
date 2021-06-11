@@ -17,3 +17,8 @@ class CommandsInterface(Interface):
     @abstractmethod
     def unset(self):
         pass
+
+
+class CorpusInterface(Interface):
+    class Meta:
+        interface = 'corpus'

@@ -4,9 +4,11 @@ from cement import App, TestApp
 from cement.core.exc import CaughtSignal
 
 from .controllers.base import Base
+from cgcrepair.controllers.simple_operation import SimpleOperations
 from .core.exc import CGCRepairError
 from cgcrepair.core.handlers.configurations import YamlConfigurations
 from cgcrepair.core.handlers.commands import CommandsHandler
+from cgcrepair.core.handlers.operations.checkout import CheckoutHandler
 from cgcrepair.core.interfaces import CommandsInterface
 
 ROOT_DIR = dirname(dirname(__file__))
@@ -50,7 +52,7 @@ class CGCRepair(App):
 
         # register handlers
         handlers = [
-            Base, YamlConfigurations, CommandsHandler
+            Base, YamlConfigurations, CommandsHandler, SimpleOperations, CheckoutHandler
         ]
 
 

@@ -31,22 +31,3 @@ class Base(Controller):
         """Default action if no sub-command is passed."""
 
         self.app.args.print_help()
-
-    @ex(
-        help='example sub command1',
-
-        # sub-command level arguments. ex: 'cgcrepair command1 --foo bar'
-        arguments=[
-            ### add a sample foo option under subcommand namespace
-            (['-f', '--foo'],
-             {'help': 'notorious foo option',
-              'action': 'store',
-              'dest': 'foo'}),
-        ],
-    )
-    def command1(self):
-        """Example sub-command."""
-
-        #commands_handler = self.app.handler.get('commands', 'commands', setup=True)
-        #out, err, dur = commands_handler(cmd_str='ping www.google.com', msg='test command', timeout=5)
-        self.app.log.fatal(self.app.metadata)

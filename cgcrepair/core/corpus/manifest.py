@@ -13,6 +13,7 @@ class Manifest:
     def __init__(self, source_path: Path):
         self.root = source_path
         self.file = source_path / 'manifest'
+        self.vuln_file = source_path / 'vuln'
         self.source_files: Dict[(str, SourceFile)] = {}
         self.vuln_files: Dict[(str, SourceFile)] = {}
         self.total_lines = 0
@@ -51,13 +52,24 @@ class Manifest:
         return {f_name: src_file.get_vuln() for f_name, src_file in self.vuln_files.items()}
 
     def write(self) -> NoReturn:
-        out = self.root / Path("manifest")
-        vuln_out = self.root / Path("vuln")
-
-        with out.open(mode="w") as of, vuln_out.open(mode="w") as vf:
+        with self.file.open(mode="w") as of, self.vuln_file.open(mode="w") as vf:
             of.writelines('\n'.join(list(self.vuln_files.keys())))
             vulns = self.get_vulns()
             json.dump(vulns, vf, indent=2)
+
+    def remove_patches(self, source: Path):
+        new_vuln = {}
+
+        with self.file.open(mode='r') as mf:
+            files = mf.read().splitlines()
+
+            for file in files:
+                src_file = SourceFile(source / Path(file))
+                src_file.remove_patch()
+                new_vuln.update({file: src_file.get_vuln()})
+
+        with self.vuln_file.open(mode='w') as vf:
+            json.dump(new_vuln, vf, indent=2)
 
 
 # TODO: this might fail in cases where the header files have files associated

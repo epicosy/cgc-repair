@@ -50,13 +50,16 @@ class YamlConfigurations(YamlConfigHandler):
         margin = self.get_config('margin')
         cwe_level = self.get_config('cwe_level')
         cores = self.get_config('cores')
+        working_dir = self.get_config('working_dir')
 
         assert cores, key_not_found_msg('cores')
+        assert working_dir, key_not_found_msg('working_dir')
         assert margin, key_not_found_msg('margin')
         assert timeout, key_not_found_msg('timeout')
         assert cwe_level, key_not_found_msg('cwe_level')
 
         assert Path(cores).exists(), f"'cores' path {cores} in configurations not found"
+        assert Path(working_dir).exists(), f"'working_dir' path {working_dir} in configurations not found"
         assert (margin > 0 and isinstance(margin, int)), key_pos_int_msg('margin')
         assert (timeout > 0 and isinstance(timeout, int)), key_pos_int_msg('timeout')
         assert (cwe_level >= 0 and isinstance(timeout, int)), key_pos_int_msg('cwe_level', equal=True)
