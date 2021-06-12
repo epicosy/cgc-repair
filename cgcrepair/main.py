@@ -3,13 +3,16 @@ from os.path import dirname
 from cement import App, TestApp
 from cement.core.exc import CaughtSignal
 
+from cgcrepair.controllers.operations import Operations
 from .controllers.base import Base
 from cgcrepair.controllers.simple_operation import SimpleOperations
 from .core.exc import CGCRepairError
 from cgcrepair.core.handlers.configurations import YamlConfigurations
 from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.handlers.operations.checkout import CheckoutHandler
-from cgcrepair.core.interfaces import CommandsInterface
+from cgcrepair.core.handlers.database import InstanceHandler
+from cgcrepair.core.handlers.operations.make import MakeHandler
+from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface
 
 ROOT_DIR = dirname(dirname(__file__))
 
@@ -24,7 +27,7 @@ class CGCRepair(App):
         exit_on_close = True
 
         interfaces = [
-            CommandsInterface,
+            CommandsInterface, DatabaseInterface
         ]
 
         # load additional framework extensions
@@ -52,7 +55,10 @@ class CGCRepair(App):
 
         # register handlers
         handlers = [
-            Base, YamlConfigurations, CommandsHandler, SimpleOperations, CheckoutHandler
+            Base, YamlConfigurations, CommandsHandler,
+            SimpleOperations, CheckoutHandler,
+            Operations, MakeHandler,
+            InstanceHandler
         ]
 
 

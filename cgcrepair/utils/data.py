@@ -3,6 +3,22 @@ from pathlib import Path
 
 
 @dataclass
+class CompileCommand:
+    command: str
+    file: Path
+    dir: Path
+
+
+@dataclass
+class WorkingPaths:
+    root: Path
+    source: Path
+    build_root: Path
+    build: Path
+    cmake: Path
+
+
+@dataclass
 class Tools:
     root: Path
     cmake_file: Path

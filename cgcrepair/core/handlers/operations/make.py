@@ -1,0 +1,112 @@
+import traceback
+from json import loads
+from pathlib import Path
+
+from cgcrepair.core.corpus.manifest import Manifest
+from cgcrepair.core.handlers.commands import CommandsHandler
+from cgcrepair.utils.data import WorkingPaths, CompileCommand
+
+
+class MakeHandler(CommandsHandler):
+    class Meta:
+        label = 'make'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.compile_commands = {}
+        self.cmake_opts = ""
+        # self.link_file = self.cmake / Path("link.txt")
+
+    def set(self):
+        super().set()
+        self.cmake_opts = f"{self.env['CMAKE_OPTS']}" if 'CMAKE_OPTS' in self.env else ""
+
+        if self.app.pargs.replace:
+            self.cmake_opts = f"{self.cmake_opts} -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON"
+
+        self.cmake_opts = f"{self.cmake_opts} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+
+        if self.app.pargs.save_temps:
+            self.env["SAVETEMPS"] = "True"
+
+        # clang as default compiler
+        if "CC" not in self.env:
+            self.env["CC"] = "clang"
+
+        if "CXX" not in self.env:
+            self.env["CXX"] = "clang++"
+
+        c_compiler = f"-DCMAKE_C_COMPILER={self.env['CC']}"
+        asm_compiler = f"-DCMAKE_ASM_COMPILER={self.env['CC']}"
+        cxx_compiler = f"-DCMAKE_CXX_COMPILER={self.env['CXX']}"
+
+        # Default shared libs
+        build_link = "-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF"
+
+        if "LINK" in self.env and self.env["LINK"] == "STATIC":
+            build_link = "-DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON"
+
+        self.cmake_opts = f"{self.cmake_opts} {c_compiler} {asm_compiler} {cxx_compiler} {build_link}"
+
+    def run(self):
+        try:
+            self.app.log.info("Creating build directory")
+            instance_handler = self.app.handler.get('database', 'instance', setup=True)
+            instance = instance_handler.get(instance_id=self.app.pargs.id)
+            working = instance.working(mkdir=True)
+
+            super().__call__(cmd_str=f"cmake {self.cmake_opts} {working.root} -DCB_PATH:STRING={instance.name}",
+                             msg="Creating build files.", cmd_cwd=str(working.build_root))
+
+            if not self.error:
+                if not self.compile_commands:
+                    self.load_commands(working)
+
+                if self.app.pargs.write_build_args:
+                    self._write_build_args(working)
+
+        except Exception as e:
+            self.error = str(e)
+            traceback.print_exc()
+        finally:
+            self.unset()
+
+    def unset(self):
+        if self.app.pargs.save_temps:
+            del self.env["SAVETEMPS"]
+
+    def _write_build_args(self, working: WorkingPaths):
+        manifest = Manifest(source_path=working.source)
+
+        write_build_args = Path(self.app.pargs.write_build_args)
+
+        for fname, _ in {**manifest.source_files, **manifest.vuln_files}.items():
+            if fname.endswith(".h"):
+                continue
+            compile_command = self.compile_commands[fname]
+
+            with write_build_args.open(mode="a") as baf:
+                cmd = compile_command.command.split()
+                bargs = ' '.join(cmd[1:-2])
+                baf.write(f"{working.root}\n{bargs}\n")
+
+            write_build_args.chmod(0o777)
+
+    def load_commands(self, working: WorkingPaths):
+        compile_commands_file = working.build_root / Path('compile_commands.json')
+
+        with compile_commands_file.open(mode="r") as json_file:
+            for entry in loads(json_file.read()):
+                if self.app.pargs.compiler_trail_path:
+                    entry['command'] = entry['command'].replace('/usr/bin/', '')
+                compile_command = CompileCommand(file=Path(entry['file']), dir=Path(entry['directory']),
+                                                 command=entry['command'])
+                if "-DPATCHED" not in compile_command.command:
+                    # Looking for the path within the source code folder
+                    if str(compile_command.file).startswith(str(working.source)):
+                        short_path = compile_command.file.relative_to(working.source)
+                    else:
+                        short_path = compile_command.file.relative_to(working.root)
+                    self.compile_commands[str(short_path)] = compile_command
+
+    # TODO: implement method to save the outcomes of executing make into the database

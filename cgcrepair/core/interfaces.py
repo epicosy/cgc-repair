@@ -22,3 +22,8 @@ class CommandsInterface(Interface):
 class CorpusInterface(Interface):
     class Meta:
         interface = 'corpus'
+
+
+class DatabaseInterface(Interface):
+    class Meta:
+        interface = 'database'
