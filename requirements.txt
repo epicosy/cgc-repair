@@ -4,3 +4,4 @@ pyyaml
 colorlog
 psutil==5.8.0
 pandas==1.2.4
+SQLAlchemy==1.4.18

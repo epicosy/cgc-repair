@@ -3,18 +3,6 @@ from pathlib import Path
 
 
 @dataclass
-class Metadata:
-    name: str
-    excluded: bool
-    total_lines: int
-    vuln_lines: int
-    patch_lines: int
-    vuln_files: int
-    main_cwe: str
-    povs: int
-
-
-@dataclass
 class Tools:
     root: Path
     cmake_file: Path

@@ -7,11 +7,16 @@ from cgcrepair.core.exc import NotEmptyDirectory
 from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.corpus.manifest import Manifest
 from distutils.dir_util import copy_tree
+from cgcrepair.core.handlers.database import Instance
 
 
 class CheckoutHandler(CommandsHandler):
     class Meta:
         label = 'checkout'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.instance = Instance()
 
     def run(self):
         try:
@@ -20,8 +25,13 @@ class CheckoutHandler(CommandsHandler):
 
             self._checkout_files(working_dir, working_dir_source)
             self._write_manifest(working_dir_source)
-            # TODO: init tracker for instance
-            self.app.log.info(f"Checked out {self.app.pargs.challenge}")
+
+            # Inserting instance into database
+            self.instance.name = self.app.pargs.challenge
+            self.instance.path = str(working_dir)
+            _id = self.app.db.add(self.instance)
+
+            self.app.log.info(f"Checked out {self.app.pargs.challenge} with id {_id}")
 
         except Exception as e:
             self.error = str(e)
