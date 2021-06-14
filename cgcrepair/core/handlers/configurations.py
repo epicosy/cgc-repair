@@ -34,7 +34,6 @@ class YamlConfigurations(YamlConfigHandler):
         self.lib = LibPaths(root=lib_root, polls=lib_root / 'polls', povs=lib_root / 'povs',
                             challenges=lib_root / 'challenges')
         self.tools = Tools(root=tools_root, cmake_file=Path(ROOT_DIR, 'cmake', 'CMakeLists.txt'),
-                           cmake_file_no_patch=Path(ROOT_DIR, 'cmake', 'CMakeListsNoPatch.txt'),
                            test=tools_root / 'cb-test.py',
                            genpolls=tools_root / Path('generate-polls', 'generate-polls'))
 

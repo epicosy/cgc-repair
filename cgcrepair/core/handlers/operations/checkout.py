@@ -18,6 +18,11 @@ class CheckoutHandler(CommandsHandler):
         super().__init__(**kwargs)
         self.instance = Instance()
 
+    def set(self):
+        super().set()
+        if not self.app.pargs.no_patch:
+            self.env["PATCH"] = "True"
+
     def run(self):
         try:
             working_dir = self._mkdir()
@@ -69,12 +74,7 @@ class CheckoutHandler(CommandsHandler):
         copy_tree(src=str(paths.source), dst=str(working_dir_source))
 
         # Copy CMakeLists.txt
-        cmake_file = self.app.config.tools.cmake_file_no_patch if self.app.pargs.no_patch else self.app.config.tools.cmake_file
-        dst_cmake_file = shutil.copy2(src=cmake_file, dst=working_dir)
-
-        if self.app.pargs.no_patch:
-            p_dst_cmake_file = Path(dst_cmake_file)
-            p_dst_cmake_file.rename(Path(p_dst_cmake_file.parent, "CMakeLists.txt"))
+        shutil.copy2(src=self.app.config.tools.cmake_file, dst=working_dir)
 
     def _write_manifest(self, working_dir_source: Path):
         if self.app.pargs.verbose:

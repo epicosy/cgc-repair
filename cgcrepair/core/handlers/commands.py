@@ -7,6 +7,8 @@ from typing import Union, AnyStr, Tuple, List
 from threading import Timer
 
 from cement import Handler
+
+from cgcrepair.core.exc import CommandError
 from cgcrepair.core.interfaces import CommandsInterface
 
 
@@ -22,6 +24,9 @@ class CommandsHandler(CommandsInterface, Handler):
 
     def set(self):
         self.env = environ.copy()
+        self.env["CGC_INCLUDE_DIR"] = self.app.config.get_config('include')
+        lib_root = self.app.config.get_config('lib')
+        self.env["CGC_LIB_DIR"] = f"{lib_root};{lib_root}/libpov;{lib_root}/aes"
 
     def run(self):
         pass
@@ -51,8 +56,8 @@ class CommandsHandler(CommandsInterface, Handler):
             if self.error:
                 self.app.log.error(self.error)
 
-    def __call__(self, cmd_str: Union[AnyStr, List[AnyStr]], cmd_cwd: str = None, msg: str = None,
-                 timeout: int = None, exit_err: bool = False) -> Tuple[Union[str, None], Union[str, None], float]:
+    def __call__(self, cmd_str: Union[AnyStr, List[AnyStr]], cmd_cwd: str = None, msg: str = None, timeout: int = None,
+                 raise_err: bool = False, exit_err: bool = False) -> Tuple[Union[str, None], Union[str, None], float]:
 
         if msg and self.app.pargs.verbose:
             self.app.log.info(msg)
@@ -75,6 +80,9 @@ class CommandsHandler(CommandsInterface, Handler):
                 self._exec(proc)
 
             time_delta = time.time() - time_start
+
+            if raise_err and self.error:
+                raise CommandError(self.error)
 
             if exit_err and self.error:
                 exit(proc.returncode)

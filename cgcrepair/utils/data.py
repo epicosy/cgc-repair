@@ -22,14 +22,12 @@ class WorkingPaths:
 class Tools:
     root: Path
     cmake_file: Path
-    cmake_file_no_patch: Path
     test: Path
     genpolls: Path
 
     def validate(self):
         assert self.root.exists(), f'Tools root path {self.root} not found'
         assert self.cmake_file.exists(), f'CMakeLists file {self.cmake_file} not found'
-        assert self.cmake_file_no_patch.exists(), f'CMakeLists file {self.cmake_file_no_patch} not found'
         assert self.genpolls.exists(), f'Polls generation script {self.genpolls} not found'
         assert self.test.exists(), f'Test script {self.test} not found'
 

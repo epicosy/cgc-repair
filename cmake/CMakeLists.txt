@@ -1,7 +1,7 @@
 # Using this min version for now
 cmake_minimum_required(VERSION 3.1)
 
-project(challenge_sets)
+project(challenge_sets C CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Needed for newer challenges
@@ -42,9 +42,6 @@ else(WIN32)
         set(LINUX TRUE)
         add_definitions(-DLINUX)
 
-        # Read in challenges to exclude from build
-        #file(STRINGS "exclude/linux.txt" cb_exclude)
-        #file(STRINGS "../linux-final.txt" cb_final)
     endif()
     if(APPLE)
         add_definitions(-DAPPLE)
@@ -59,16 +56,25 @@ else(WIN32)
         -fcommon
         -w
         -g3
-        -m32
     )
 
     if(DEFINED ENV{SAVETEMPS})
         add_compile_options(-save-temps=obj)
     endif()
 
-    # Link everything 32-bit (until we have a 64-bit option)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m32")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -m32")
+    if(DEFINED ENV{M32})
+        # Link everything 32-bit
+
+        set(CMAKE_C_FLAGS_INIT "${CMAKE_C_FLAGS_INIT} -m32")
+        set(CMAKE_CXX_FLAGS_INIT "${CMAKE_CXX_FLAGS_INIT} -m32")
+        set(CMAKE_ASM_FLAGS_INIT "${CMAKE_ASM_FLAGS_INIT} -m32")
+
+        set(CMAKE_EXE_LINKER_FLAGS_INIT "${CMAKE_EXE_LINKER_FLAGS} -m32")
+        set(CMAKE_SHARED_LINKER_FLAGS_INIT "${CMAKE_SHARED_LINKER_FLAGS} -m32")
+        set(CMAKE_MODULE_LINKER_FLAGS_INIT "${CMAKE_MODULE_LINKER_FLAGS_INIT} -m32")
+
+        add_compile_definitions(X32_COMPILE)
+    endif()
 
     # Linker options
     # Dynamic by default
@@ -87,9 +93,13 @@ if(DEFINED ENV{COVERAGE})
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
 endif()
 
-# Build all libraries
-include_directories(include)
-add_subdirectory(include)
+# Include all libraries
+include_directories($ENV{CGC_INCLUDE_DIR})
+
+find_library(LIB_CGC NAMES cgc PATHS $ENV{CGC_LIB_DIR})
+find_library(LIB_POV NAMES pov PATHS $ENV{CGC_LIB_DIR})
+find_library(LIB_AES NAMES tiny-AES128-C PATHS $ENV{CGC_LIB_DIR})
+
 
 function(build path target)
     message(STATUS "Building ${target}")
@@ -101,8 +111,10 @@ function(build path target)
     set(cb_all_src ${cb_lib} ${cb_src} ${cb_inc})
 
     add_executable(${target} ${cb_all_src})
-    add_executable(${target}_patched ${cb_all_src})
 
+    if(DEFINED ENV{PATCH})
+        add_executable(${target}_patched ${cb_all_src})
+    endif()
 
     target_include_directories(${target} PUBLIC ${path}/lib ${path}/src ${path}/include)
     target_include_directories(${target}_patched PUBLIC ${path}/lib ${path}/src ${path}/include)
@@ -110,15 +122,19 @@ function(build path target)
     set_target_properties(${target} PROPERTIES
                           RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}
                           RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR})
-    set_target_properties(${target}_patched PROPERTIES
-                          RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}
-                          RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR})
+    if(DEFINED ENV{PATCH})
+        set_target_properties(${target}_patched PROPERTIES
+                              RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}
+                              RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
 
     # Add patched defines
     target_compile_definitions(${target}_patched PUBLIC ${patch_defs})
 
-    target_link_libraries(${target} LINK_PUBLIC cgc)
-    target_link_libraries(${target}_patched LINK_PUBLIC cgc)
+    target_link_libraries(${target} LINK_PUBLIC ${LIB_CGC} ${LIB_AES})
+    if(DEFINED ENV{PATCH})
+        target_link_libraries(${target}_patched LINK_PUBLIC ${LIB_CGC} ${LIB_AES})
+    endif()
 
 
     IF(WIN32)
@@ -149,7 +165,7 @@ function(buildPOV path cb pov)
         "${path}/include"
         "${path}/lib"
         "${path}/src"
-        "${PROJECT_SOURCE_DIR}/include/libpov/pov"
+        "$ENV{CGC_INCLUDE_DIR}/libpov"
     )
     set_target_properties(${target} PROPERTIES
         OUTPUT_NAME "${pov}.pov"
@@ -157,16 +173,18 @@ function(buildPOV path cb pov)
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}
     )
 
-    target_link_libraries(${target} LINK_PUBLIC cgc pov)
+    target_link_libraries(${target} LINK_PUBLIC ${LIB_CGC} ${LIB_POV} ${LIB_AES})
 endfunction(buildPOV)
 
 function(buildCB)
-    # Generate all the patched #defines for this challenge
-    set(patch_defs -DPATCHED)
-    if(VULN_COUNT)
-        foreach(i RANGE 1 ${VULN_COUNT})
-            set(patch_defs ${patch_defs} -DPATCHED_${i})
-        endforeach()
+    if(DEFINED ENV{PATCH})
+        # Generate all the patched #defines for this challenge
+        set(patch_defs -DPATCHED)
+        if(VULN_COUNT)
+            foreach(i RANGE 1 ${VULN_COUNT})
+                set(patch_defs ${patch_defs} -DPATCHED_${i})
+            endforeach()
+        endif()
     endif()
 
     # Some challenges have multiple binaries that need to be built
@@ -211,8 +229,8 @@ function(buildSO)
         else()
             if(APPLE)
                 set(LIB_CGC "${PROJECT_BINARY_DIR}/include/libcgc.dylib")
-            else()
-                set(LIB_CGC "${PROJECT_BINARY_DIR}/include/libcgc.so")
+            #else()
+            #    set(LIB_CGC "${PROJECT_BINARY_DIR}/include/libcgc.so")
             endif()
         endif()
 

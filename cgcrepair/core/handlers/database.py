@@ -1,15 +1,26 @@
 from pathlib import Path
 
 from cement import Handler
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, declarative_base
+from sqlalchemy.orm import Session, declarative_base, relationship
 from sqlalchemy import inspect
 
 from cgcrepair.core.interfaces import DatabaseInterface
 from cgcrepair.utils.data import WorkingPaths
 
 Base = declarative_base()
+
+
+class CompileOutcome(Base):
+    __tablename__ = "compile_outcome"
+
+    id = Column('id', Integer, primary_key=True)
+    instance_id = Column('instance_id', Integer, ForeignKey('instance.id'))
+    instance = relationship("Instance", back_populates="compile_outcome")
+    error = Column('error', String, nullable=True)
+    tag = Column('tag', String, nullable=False)
+    exit_status = Column('exit_status', Integer)
 
 
 class Metadata(Base):
@@ -29,16 +40,14 @@ class Instance(Base):
     __tablename__ = "instance"
 
     id = Column('id', Integer, primary_key=True)
-    name = Column('name', String, unique=False)
-    path = Column('path', String, unique=True)
-    pointer = Column('pointer', Integer, unique=False, nullable=True)
+    name = Column('name', String)
+    path = Column('path', String)
+    pointer = Column('pointer', Integer, nullable=True)
+    compile_outcome = relationship("CompileOutcome", back_populates="instance")
 
-    def working(self, mkdir: bool = False):
+    def working(self):
         working_dir = Path(self.path)
         build_root = working_dir / Path("build")
-
-        if mkdir:
-            build_root.mkdir(exist_ok=True)
 
         return WorkingPaths(root=working_dir, source=working_dir / Path(self.name),
                             build_root=build_root, build=build_root / Path(self.name),
@@ -78,3 +87,7 @@ class Database:
 
             session.expunge_all()
             return results
+
+    def count(self, entity: Base):
+        with Session(self.engine) as session, session.begin():
+            return session.query(entity).count()

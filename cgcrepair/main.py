@@ -12,6 +12,7 @@ from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.handlers.operations.checkout import CheckoutHandler
 from cgcrepair.core.handlers.database import InstanceHandler
 from cgcrepair.core.handlers.operations.make import MakeHandler
+from cgcrepair.core.handlers.operations.compile import CompileHandler
 from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface
 
 ROOT_DIR = dirname(dirname(__file__))
@@ -57,7 +58,7 @@ class CGCRepair(App):
         handlers = [
             Base, YamlConfigurations, CommandsHandler,
             SimpleOperations, CheckoutHandler,
-            Operations, MakeHandler,
+            Operations, MakeHandler, CompileHandler,
             InstanceHandler
         ]
 

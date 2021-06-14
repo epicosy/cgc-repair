@@ -6,3 +6,7 @@ class CGCRepairError(Exception):
 
 class NotEmptyDirectory(Exception):
     """Raise when test not found."""
+
+
+class CommandError(Exception):
+    """Raise when test not found."""

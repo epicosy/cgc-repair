@@ -1,9 +1,12 @@
 import traceback
+import platform
 from json import loads
 from pathlib import Path
 
 from cgcrepair.core.corpus.manifest import Manifest
+from cgcrepair.core.exc import CommandError
 from cgcrepair.core.handlers.commands import CommandsHandler
+from cgcrepair.core.handlers.database import CompileOutcome
 from cgcrepair.utils.data import WorkingPaths, CompileCommand
 
 
@@ -15,7 +18,6 @@ class MakeHandler(CommandsHandler):
         super().__init__(**kwargs)
         self.compile_commands = {}
         self.cmake_opts = ""
-        # self.link_file = self.cmake / Path("link.txt")
 
     def set(self):
         super().set()
@@ -28,6 +30,12 @@ class MakeHandler(CommandsHandler):
 
         if self.app.pargs.save_temps:
             self.env["SAVETEMPS"] = "True"
+
+        # setting platform architecture
+        if '64bit' in platform.architecture()[0]:
+            self.cmake_opts = f"{self.cmake_opts} -DCMAKE_SYSTEM_PROCESSOR=amd64"
+        else:
+            self.cmake_opts = f"{self.cmake_opts} -DCMAKE_SYSTEM_PROCESSOR=i686"
 
         # clang as default compiler
         if "CC" not in self.env:
@@ -50,24 +58,22 @@ class MakeHandler(CommandsHandler):
 
     def run(self):
         try:
-            self.app.log.info("Creating build directory")
             instance_handler = self.app.handler.get('database', 'instance', setup=True)
             instance = instance_handler.get(instance_id=self.app.pargs.id)
-            working = instance.working(mkdir=True)
+            working = instance.working()
+
+            if not working.build_root.exists():
+                self.app.log.info("Creating build directory")
+                working.build_root.mkdir(exist_ok=True)
 
             super().__call__(cmd_str=f"cmake {self.cmake_opts} {working.root} -DCB_PATH:STRING={instance.name}",
-                             msg="Creating build files.", cmd_cwd=str(working.build_root))
+                             msg="Creating build files.", cmd_cwd=str(working.build_root), raise_err=True)
 
-            if not self.error:
-                if not self.compile_commands:
-                    self.load_commands(working)
+            if self.app.pargs.write_build_args:
+                self._write_build_args(working)
 
-                if self.app.pargs.write_build_args:
-                    self._write_build_args(working)
-
-        except Exception as e:
-            self.error = str(e)
-            traceback.print_exc()
+        except CommandError as ce:
+            self.error = str(ce)
         finally:
             self.unset()
 
@@ -77,8 +83,10 @@ class MakeHandler(CommandsHandler):
 
     def _write_build_args(self, working: WorkingPaths):
         manifest = Manifest(source_path=working.source)
-
         write_build_args = Path(self.app.pargs.write_build_args)
+
+        if not self.compile_commands:
+            self.load_commands(working)
 
         for fname, _ in {**manifest.source_files, **manifest.vuln_files}.items():
             if fname.endswith(".h"):
@@ -109,4 +117,16 @@ class MakeHandler(CommandsHandler):
                         short_path = compile_command.file.relative_to(working.root)
                     self.compile_commands[str(short_path)] = compile_command
 
-    # TODO: implement method to save the outcomes of executing make into the database
+    def save_outcome(self):
+        outcome = CompileOutcome()
+        outcome.instance_id = self.app.pargs.id
+        outcome.error = self.error
+        outcome.exit_status = self.return_code
+
+        if self.app.pargs.tag:
+            outcome.tag = self.app.pargs.tag
+        else:
+            outcome.tag = self.Meta.label
+
+        co_id = self.app.db.add(outcome)
+        self.app.log.info(f"Inserted '{self.Meta.label} outcome' with id {co_id} for instance {self.app.pargs.id}.")
