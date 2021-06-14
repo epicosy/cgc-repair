@@ -30,3 +30,18 @@ class SimpleOperations(Controller):
 
         if checkout_handler.error:
             self.app.log.error(checkout_handler.error)
+
+    @ex(
+        help='Generates polls for challenge. Theses are the positive tests.',
+        arguments=[
+            (['-n', '--count'], {'help': 'Number of traversals through the state graph per round', 'type': int,
+                                 'default': 100})
+        ]
+    )
+    def genpolls(self):
+        genpolls_handler = self.app.handler.get('commands', 'genpolls', setup=True)
+        genpolls_handler.set()
+        genpolls_handler.run()
+
+        if genpolls_handler.error:
+            self.app.log.error(genpolls_handler.error)

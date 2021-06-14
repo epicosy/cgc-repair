@@ -36,6 +36,7 @@ class Tools:
 class ChallengePaths:
     name: str
     source: Path
+    cmake: Path
     info: Path
     polls: Path
     poller: Path
@@ -62,11 +63,12 @@ class LibPaths:
         return self.polls / Path(challenge_name, 'poller')
 
     def get_challenge_paths(self, challenge_name):
-        source = self.challenges / Path(challenge_name)
-        readme = source / Path("README.md")
-        polls = self.polls / Path(challenge_name, 'poller')
+        source = self.challenges / challenge_name
+        cmake = source / "CMakeLists.txt"
+        readme = source / "README.md"
+        polls = self.polls / challenge_name / 'poller'
         povs = self.povs / challenge_name
-        poller = self.challenges / Path(challenge_name, 'poller')
+        poller = self.challenges / challenge_name / 'poller'
 
-        return ChallengePaths(challenge_name, source, readme, polls, poller, povs)
+        return ChallengePaths(challenge_name, source, cmake, readme, polls, poller, povs)
 

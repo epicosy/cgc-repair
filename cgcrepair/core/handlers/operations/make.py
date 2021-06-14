@@ -56,18 +56,21 @@ class MakeHandler(CommandsHandler):
 
         self.cmake_opts = f"{self.cmake_opts} {c_compiler} {asm_compiler} {cxx_compiler} {build_link}"
 
+    def _make(self, source: Path, name: str, dest: Path):
+        if not dest.exists():
+            self.app.log.info("Creating build directory")
+            dest.mkdir(exist_ok=True)
+
+        super().__call__(cmd_str=f"cmake {self.cmake_opts} {source} -DCB_PATH:STRING={name}",
+                         msg="Creating build files.", cmd_cwd=str(dest), raise_err=True)
+
     def run(self):
         try:
             instance_handler = self.app.handler.get('database', 'instance', setup=True)
             instance = instance_handler.get(instance_id=self.app.pargs.id)
             working = instance.working()
 
-            if not working.build_root.exists():
-                self.app.log.info("Creating build directory")
-                working.build_root.mkdir(exist_ok=True)
-
-            super().__call__(cmd_str=f"cmake {self.cmake_opts} {working.root} -DCB_PATH:STRING={instance.name}",
-                             msg="Creating build files.", cmd_cwd=str(working.build_root), raise_err=True)
+            self._make(working.root, instance.name, working.build_root)
 
             if self.app.pargs.write_build_args:
                 self._write_build_args(working)

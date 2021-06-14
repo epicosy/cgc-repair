@@ -27,6 +27,12 @@ class CommandsHandler(CommandsInterface, Handler):
         self.env["CGC_INCLUDE_DIR"] = self.app.config.get_config('include')
         lib_root = self.app.config.get_config('lib')
         self.env["CGC_LIB_DIR"] = f"{lib_root};{lib_root}/libpov;{lib_root}/aes"
+        ld_lib_path = f"{lib_root}/polls:{lib_root}:{lib_root}/aes"
+
+        if "LD_LIBRARY_PATH" in self.env:
+            self.env["LD_LIBRARY_PATH"] = ld_lib_path + ":" + self.env["LD_LIBRARY_PATH"]
+        else:
+            self.env["LD_LIBRARY_PATH"] = ld_lib_path
 
     def run(self):
         pass

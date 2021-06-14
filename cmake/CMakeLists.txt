@@ -117,7 +117,10 @@ function(build path target)
     endif()
 
     target_include_directories(${target} PUBLIC ${path}/lib ${path}/src ${path}/include)
-    target_include_directories(${target}_patched PUBLIC ${path}/lib ${path}/src ${path}/include)
+
+    if(DEFINED ENV{PATCH})
+    	target_include_directories(${target}_patched PUBLIC ${path}/lib ${path}/src ${path}/include)
+    endif()
 
     set_target_properties(${target} PROPERTIES
                           RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}
@@ -128,8 +131,10 @@ function(build path target)
                               RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR})
     endif()
 
+    if(DEFINED ENV{PATCH})
     # Add patched defines
-    target_compile_definitions(${target}_patched PUBLIC ${patch_defs})
+    	target_compile_definitions(${target}_patched PUBLIC ${patch_defs})
+    endif()
 
     target_link_libraries(${target} LINK_PUBLIC ${LIB_CGC} ${LIB_AES})
     if(DEFINED ENV{PATCH})
@@ -245,6 +250,10 @@ function(buildSO)
         target_include_directories(${LIB_NAME} PUBLIC ${LIB_DIR})
         target_include_directories(${LIB_NAME} PUBLIC ${INCLUDE_DIR})
         target_link_libraries(${LIB_NAME} ${LIB_CGC})
+
+	INSTALL(TARGETS ${LIB_NAME}
+		LIBRARY DESTINATION /usr/local/lib/cgc/polls
+	)
     endif()
 endfunction(buildSO)
 

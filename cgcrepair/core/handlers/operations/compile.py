@@ -1,5 +1,7 @@
+import shutil
 from pathlib import Path
 
+from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.exc import CommandError
 from cgcrepair.core.handlers.database import CompileOutcome
 from cgcrepair.core.handlers.operations.make import MakeHandler
@@ -135,3 +137,31 @@ class CompileHandler(MakeHandler):
         else:
             self.error = "Could not find compile command."
             return None
+
+    def install_shared_objects(self, challenge: Challenge):
+        # check if shared objects are installed
+        challenge_id = challenge.id()
+
+        if challenge.has_shared_objects():
+            lib_polls_dir = Path(self.app.config.get_config('lib'), 'polls')
+            lib_id_path = lib_polls_dir / f"lib{challenge_id}.so"
+
+            if lib_id_path.exists():
+                self.app.log.info(f"Shared objects {lib_id_path.name} already installed.")
+            else:
+                build = Path('/tmp', challenge_id)
+                build.mkdir(parents=True)
+
+                # make files
+                super()._make(source=self.app.config.lib.challenges, name=challenge.name, dest=build)
+                # build shared objects
+                super().__call__(cmd_str=f"cmake --build . --target {challenge_id}", msg=f"Building {challenge_id}\n",
+                                 raise_err=True, cmd_cwd=str(build))
+
+                # install shared objects
+                super().__call__(cmd_str=f"cmake --install {build}", raise_err=True, cmd_cwd=str(build),
+                                 msg=f"Installing shared objects {lib_id_path.name} for {challenge.name}.")
+
+                self.app.log.info(f"Installed shared objects.")
+
+                shutil.rmtree(str(build))

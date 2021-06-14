@@ -10,6 +10,7 @@ from .core.exc import CGCRepairError
 from cgcrepair.core.handlers.configurations import YamlConfigurations
 from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.handlers.operations.checkout import CheckoutHandler
+from cgcrepair.core.handlers.operations.genpolls import GenPollsHandler
 from cgcrepair.core.handlers.database import InstanceHandler
 from cgcrepair.core.handlers.operations.make import MakeHandler
 from cgcrepair.core.handlers.operations.compile import CompileHandler
@@ -57,7 +58,7 @@ class CGCRepair(App):
         # register handlers
         handlers = [
             Base, YamlConfigurations, CommandsHandler,
-            SimpleOperations, CheckoutHandler,
+            SimpleOperations, CheckoutHandler, GenPollsHandler,
             Operations, MakeHandler, CompileHandler,
             InstanceHandler
         ]

@@ -4,7 +4,7 @@
 cgcrepair:
 
 ### Toggle application level debug (does not toggle framework debugging)
-  debug: false
+  debug: true
 
 ### Where external (third-party) plugins are loaded from
 # plugin_dir: /var/lib/cgcrepair/plugins/
