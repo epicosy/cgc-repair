@@ -61,7 +61,8 @@ class LibPaths:
     def validate(self):
         assert self.root.exists(), f'Library root path {self.root} not found'
         assert self.polls.exists(), f'Polls path {self.polls} not found'
-        assert self.povs.exists(), f'POVs path {self.povs} not found'
+        # TODO: fix this path
+        # assert self.povs.exists(), f'POVs path {self.povs} not found'
         assert self.challenges.exists(), f'Corpus path {self.challenges} not found'
 
     def get_challenges(self):

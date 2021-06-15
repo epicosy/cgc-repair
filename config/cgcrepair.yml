@@ -37,6 +37,7 @@ cgcrepair:
 
 ### Parsing
   cwe_level: 3
+  cwe_dict: '/etc/cgc-repair/cwe_dict.csv'
 
 
 log.colorlog:

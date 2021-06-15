@@ -75,7 +75,7 @@ class CGCRepairTest(TestApp, CGCRepair):
 def main():
     with CGCRepair() as app:
         try:
-            # app.config.validate()
+            app.config.validate()
             app.run()
 
         except AssertionError as e:
