@@ -6,6 +6,8 @@
 $ pip install -r requirements.txt
 
 $ pip install setup.py
+
+$ sudo ./install_cgc.sh
 ```
 
 ## Development
