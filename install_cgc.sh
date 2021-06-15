@@ -9,7 +9,7 @@ mkdir -p $corpus_path
 #Tools
 tools_path="/usr/local/share/pyshared/cgc"
 mkdir -p "$tools_path"
-cp "tools/*" $tools_path
+cp -r tools/* $tools_path
 cp "tools/cwe_dict.csv" "/usr/local/share"
 
 #Configs
@@ -48,7 +48,7 @@ cmake "$cmake_opts" $include_src_dir
 cmake --build .
 [[ $? -eq 1 ]] && echo "[Error] cmake build failed" && exit 1 ;
 
-cmake --install .
+cmake --build . --target install
 [[ $? -eq 1 ]] && echo "[Error] cmake install failed" && exit 1 ;
 
 echo "cgc include libraries installed"
