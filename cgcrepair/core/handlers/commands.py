@@ -3,7 +3,7 @@ import psutil
 import time
 
 from os import environ
-from typing import Union, AnyStr, Tuple, List
+from typing import Union, AnyStr, List
 from threading import Timer
 
 from cement import Handler
@@ -20,6 +20,7 @@ class CommandsHandler(CommandsInterface, Handler):
         super().__init__(**kw)
         self.env = None
         self.return_code = 0
+        self.duration = 0
         self.output, self.error = None, None
 
     def set(self):
@@ -48,7 +49,7 @@ class CommandsHandler(CommandsInterface, Handler):
             out.append(decoded)
 
             if self.app.pargs.verbose:
-                self.app.log.info(decoded)
+                self.app.log.debug(decoded)
 
         self.output = ''.join(out)
 
@@ -63,7 +64,7 @@ class CommandsHandler(CommandsInterface, Handler):
                 self.app.log.error(self.error)
 
     def __call__(self, cmd_str: Union[AnyStr, List[AnyStr]], cmd_cwd: str = None, msg: str = None, timeout: int = None,
-                 raise_err: bool = False, exit_err: bool = False) -> Tuple[Union[str, None], Union[str, None], float]:
+                 raise_err: bool = False, exit_err: bool = False):
 
         if msg and self.app.pargs.verbose:
             self.app.log.info(msg)
@@ -85,15 +86,13 @@ class CommandsHandler(CommandsInterface, Handler):
             else:
                 self._exec(proc)
 
-            time_delta = time.time() - time_start
+            self.duration = time.time() - time_start
 
             if raise_err and self.error:
                 raise CommandError(self.error)
 
             if exit_err and self.error:
                 exit(proc.returncode)
-
-            return self.output, self.error, time_delta
 
 
 # https://stackoverflow.com/a/54775443

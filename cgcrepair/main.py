@@ -14,6 +14,7 @@ from cgcrepair.core.handlers.operations.genpolls import GenPollsHandler
 from cgcrepair.core.handlers.database import InstanceHandler
 from cgcrepair.core.handlers.operations.make import MakeHandler
 from cgcrepair.core.handlers.operations.compile import CompileHandler
+from cgcrepair.core.handlers.operations.test import TestHandler
 from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface
 
 ROOT_DIR = dirname(dirname(__file__))
@@ -59,7 +60,7 @@ class CGCRepair(App):
         handlers = [
             Base, YamlConfigurations, CommandsHandler,
             SimpleOperations, CheckoutHandler, GenPollsHandler,
-            Operations, MakeHandler, CompileHandler,
+            Operations, MakeHandler, CompileHandler, TestHandler,
             InstanceHandler
         ]
 

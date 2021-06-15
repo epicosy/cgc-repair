@@ -1,0 +1,44 @@
+import os
+import sys
+import psutil
+
+from typing import List
+
+
+def kill_by_pid(pids: List[str] = None):
+    killed_pids = []
+    """
+        Kills processes from a supplied list of pids 
+    """
+    for pid in pids:
+        print(int(pid))
+        if psutil.pid_exists(int(pid)):
+            os.system(f"kill -9 {pid}")
+            killed_pids.append(pid)
+
+    return killed_pids
+
+
+def kill_by_name(process_name: str,  target_pids: List[str] = None):
+    """
+    Gets a list of all the PIDs of a all the running process whose name contains the given string process_name and
+    kills the process. If target_pids list is supplied, it checks the pids for the process with the list
+    """
+    # based on https://thispointer.com/python-check-if-a-process-is-running-by-name-and-find-its-process-id-pid/
+    # Iterate over the all the running process
+    killed_pids = []
+
+    for proc in psutil.process_iter():
+        try:
+            proc_info = proc.as_dict(attrs=['pid', 'name', 'create_time'])
+            # Check if process name contains the given name string.
+            if process_name in proc_info['name']:
+                if psutil.pid_exists(proc_info['pid']):
+                    if target_pids and proc_info['pid'] not in target_pids:
+                        continue
+                    os.system(f"kill -9 {proc_info['pid']}")
+                    killed_pids.append(proc_info['pid'])
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as pe:
+            sys.stderr.write(str(pe))
+
+    return killed_pids

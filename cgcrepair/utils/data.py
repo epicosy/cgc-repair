@@ -3,6 +3,14 @@ from pathlib import Path
 
 
 @dataclass
+class Test:
+    name: str
+    order: int
+    is_pov: bool
+    file: Path
+
+
+@dataclass
 class CompileCommand:
     command: str
     file: Path

@@ -6,7 +6,7 @@ from pathlib import Path
 from cgcrepair.core.corpus.manifest import Manifest
 from cgcrepair.core.exc import CommandError
 from cgcrepair.core.handlers.commands import CommandsHandler
-from cgcrepair.core.handlers.database import CompileOutcome
+from cgcrepair.core.handlers.database import CompileOutcome, Instance
 from cgcrepair.utils.data import WorkingPaths, CompileCommand
 
 
@@ -132,4 +132,5 @@ class MakeHandler(CommandsHandler):
             outcome.tag = self.Meta.label
 
         co_id = self.app.db.add(outcome)
+        self.app.db.update(entity=Instance, entity_id=self.app.pargs.id, attr='pointer', value=co_id)
         self.app.log.info(f"Inserted '{self.Meta.label} outcome' with id {co_id} for instance {self.app.pargs.id}.")
