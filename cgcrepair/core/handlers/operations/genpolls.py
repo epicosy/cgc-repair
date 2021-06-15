@@ -37,7 +37,9 @@ class GenPollsHandler(CommandsHandler):
 
     def run(self):
         try:
-            challenge_paths = self.app.config.lib.get_challenge_paths(self.app.pargs.challenge)
+            corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+            challenge_paths = corpus_handler.get_challenge_paths(self.app.pargs.challenge)
+
             self.install_shared_objects(challenge_paths)
 
             if challenge_paths.polls.exists():
@@ -82,7 +84,7 @@ class GenPollsHandler(CommandsHandler):
                 if state_machine_script.exists() and state_graph.exists():
                     self.out_dir.mkdir(parents=True, exist_ok=True)
                     python2 = self.app.config.get_config('python2')
-                    cmd_str = f"{python2} -B {self.app.config.tools.genpolls} --count {self.app.pargs.count} " \
+                    cmd_str = f"{python2} -B {self.app.tools.genpolls} --count {self.app.pargs.count} " \
                               f"--store_seed --depth 1048575 {state_machine_script} {state_graph} {self.out_dir}"
 
                     super().__call__(cmd_str=cmd_str, msg=f"Generating polls for {challenge_paths.name}.\n",

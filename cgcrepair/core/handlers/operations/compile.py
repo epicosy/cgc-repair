@@ -153,7 +153,7 @@ class CompileHandler(MakeHandler):
                 build.mkdir(parents=True)
 
                 # make files
-                super()._make(source=self.app.config.lib.challenges, name=challenge.name, dest=build)
+                super()._make(source=self.app.config.get_config('corpus'), name=challenge.name, dest=build)
                 # build shared objects
                 super().__call__(cmd_str=f"cmake --build . --target {challenge_id}", msg=f"Building {challenge_id}\n",
                                  raise_err=True, cmd_cwd=str(build))

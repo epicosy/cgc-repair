@@ -70,11 +70,12 @@ class CheckoutHandler(CommandsHandler):
         self.app.log.info(f"Copying files to {working_dir}.")
         # Copy challenge source files
         working_dir_source.mkdir()
-        paths = self.app.config.lib.get_challenge_paths(challenge_name=self.app.pargs.challenge)
+        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+        paths = corpus_handler.get_challenge_paths(challenge_name=self.app.pargs.challenge)
         copy_tree(src=str(paths.source), dst=str(working_dir_source))
 
         # Copy CMakeLists.txt
-        shutil.copy2(src=self.app.config.tools.cmake_file, dst=working_dir)
+        shutil.copy2(src=self.app.tools.cmake_file, dst=working_dir)
 
     def _write_manifest(self, working_dir_source: Path):
         if self.app.pargs.verbose:

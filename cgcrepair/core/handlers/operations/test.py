@@ -29,7 +29,8 @@ class TestHandler(CommandsHandler):
         try:
             instance_handler = self.app.handler.get('database', 'instance', setup=True)
             instance = instance_handler.get(instance_id=self.app.pargs.id)
-            challenge_paths = self.app.config.lib.get_challenge_paths(instance.name)
+            corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+            challenge_paths = corpus_handler.get_challenge_paths(instance.name)
             working = instance.working()
 
             tests = Tests(polls_path=challenge_paths.polls, povs_path=working.build, tests=self.app.pargs.tests,
@@ -120,7 +121,7 @@ class TestHandler(CommandsHandler):
         # use timeout or duration from sanity check
         timeout = self.get_timeout()
         python2 = self.app.config.get_config('python2')
-        cb_cmd = [python2, str(self.app.config.tools.test), '--directory', str(working.build), '--xml', str(test.file),
+        cb_cmd = [python2, str(self.app.tools.test), '--directory', str(working.build), '--xml', str(test.file),
                   '--concurrent', '1', '--debug', '--timeout', str(timeout), '--negotiate_seed', '--cb'] + bin_names
 
         if test.is_pov:

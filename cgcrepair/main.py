@@ -9,13 +9,14 @@ from cgcrepair.controllers.simple_operation import SimpleOperations
 from .core.exc import CGCRepairError
 from cgcrepair.core.handlers.configurations import YamlConfigurations
 from cgcrepair.core.handlers.commands import CommandsHandler
+from cgcrepair.core.handlers.corpus import CorpusHandler
 from cgcrepair.core.handlers.operations.checkout import CheckoutHandler
 from cgcrepair.core.handlers.operations.genpolls import GenPollsHandler
 from cgcrepair.core.handlers.database import InstanceHandler
 from cgcrepair.core.handlers.operations.make import MakeHandler
 from cgcrepair.core.handlers.operations.compile import CompileHandler
 from cgcrepair.core.handlers.operations.test import TestHandler
-from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface
+from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface, CorpusInterface
 
 ROOT_DIR = dirname(dirname(__file__))
 
@@ -30,7 +31,7 @@ class CGCRepair(App):
         exit_on_close = True
 
         interfaces = [
-            CommandsInterface, DatabaseInterface
+            CommandsInterface, DatabaseInterface, CorpusInterface
         ]
 
         # load additional framework extensions
@@ -45,8 +46,6 @@ class CGCRepair(App):
         # configuration handler
         config_handler = 'yaml_configurations'
 
-        config_dirs = [f'{ROOT_DIR}/config']
-
         # configuration file suffix
         config_file_suffix = '.yml'
 
@@ -58,7 +57,7 @@ class CGCRepair(App):
 
         # register handlers
         handlers = [
-            Base, YamlConfigurations, CommandsHandler,
+            Base, YamlConfigurations, CommandsHandler, CorpusHandler,
             SimpleOperations, CheckoutHandler, GenPollsHandler,
             Operations, MakeHandler, CompileHandler, TestHandler,
             InstanceHandler

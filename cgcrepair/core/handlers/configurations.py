@@ -1,10 +1,5 @@
 from cement.ext.ext_yaml import YamlConfigHandler
 from pathlib import Path
-from os.path import dirname
-
-from cgcrepair.utils.data import LibPaths, Tools
-
-ROOT_DIR = dirname(dirname(dirname(dirname(__file__))))
 
 
 def key_not_found_msg(key: str):
@@ -21,21 +16,6 @@ class YamlConfigurations(YamlConfigHandler):
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.lib = None
-        self.tools = None
-
-    def _parse_file(self, file_path):
-        super()._parse_file(file_path)
-
-        # TODO: pick root paths from config file
-        lib_root = Path(ROOT_DIR, 'lib')
-        tools_root = Path(ROOT_DIR, 'tools')
-
-        self.lib = LibPaths(root=lib_root, polls=lib_root / 'polls', povs=lib_root / 'povs',
-                            challenges=lib_root / 'challenges')
-        self.tools = Tools(root=tools_root, cmake_file=Path(ROOT_DIR, 'cmake', 'CMakeLists.txt'),
-                           test=tools_root / 'cb-test.py',
-                           genpolls=tools_root / Path('generate-polls', 'generate-polls'))
 
     def get_config(self, key: str):
         if self.has_section('cgcrepair'):
@@ -50,24 +30,30 @@ class YamlConfigurations(YamlConfigHandler):
         cwe_level = self.get_config('cwe_level')
         cores = self.get_config('cores')
         working_dir = self.get_config('working_dir')
-        cwe_dict = self.get_config('cwe_dict')
+        corpus = self.get_config('corpus')
+        tools = self.get_config('tools')
+        polls = self.get_config('polls')
+        # povs = self.get_config('polls')
 
+        assert corpus, key_not_found_msg('corpus')
+        assert tools, key_not_found_msg('tools')
+        assert polls, key_not_found_msg('polls')
+        # assert povs, key_not_found_msg('povs')
         assert cores, key_not_found_msg('cores')
-        assert cwe_dict, key_not_found_msg('cwe_dict')
         assert working_dir, key_not_found_msg('working_dir')
         assert margin, key_not_found_msg('margin')
         assert timeout, key_not_found_msg('timeout')
         assert cwe_level, key_not_found_msg('cwe_level')
 
+        assert Path(corpus).exists(), f'Corpus path {corpus} not found'
+        assert Path(tools).exists(), f'Tools path {tools} not found'
+        assert Path(polls).exists(), f'Polls path {polls} not found'
+        # assert povs.exists(), f'POVs path {povs} not found'
         assert Path(cores).exists(), f"'cores' path {cores} in configurations not found"
-        assert Path(cwe_dict).exists(), f"'cores' path {cwe_dict} in configurations not found"
         assert Path(working_dir).exists(), f"'working_dir' path {working_dir} in configurations not found"
         assert (margin > 0 and isinstance(margin, int)), key_pos_int_msg('margin')
         assert (timeout > 0 and isinstance(timeout, int)), key_pos_int_msg('timeout')
         assert (cwe_level >= 0 and isinstance(timeout, int)), key_pos_int_msg('cwe_level', equal=True)
-
-        self.lib.validate()
-        self.tools.validate()
 
 
 def load(app):

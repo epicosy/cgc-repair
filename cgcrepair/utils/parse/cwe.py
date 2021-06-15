@@ -10,7 +10,7 @@ PRECEDE_CWE = r"::NATURE:CanPrecede:CWE ID:(\d{1,4}):"
 PEER_CWE = r"::NATURE:PeerOf:CWE ID:(\d{1,4}):"
 ALIAS_CWE = r"::NATURE:CanAlsoBe:CWE ID:(\d{1,4}):"
 # TODO: fix this path, can not remain like this
-cwe_dict = pd.read_csv('/etc/cgc-repair/cwe_dict.csv', index_col=False)
+cwe_dict = pd.read_csv('/usr/local/share/cwe_dict.csv', index_col=False)
 cwe_dict.rename(columns={'CWE-ID': 'cwe_id', 'Name': 'name', 'Related Weaknesses': 'relatives'}, inplace=True)
 no_null_relatives = cwe_dict[cwe_dict.relatives.notnull()]
 cwe_alias = {}

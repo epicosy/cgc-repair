@@ -1,5 +1,28 @@
 #!/bin/bash
 
+# Installs corpus, tools, configs and paths
+
+corpus_path="/usr/local/src/cgc"
+mkdir -p $corpus_path
+# TODO: copy corpus to to corpus path
+
+#Tools
+tools_path="/usr/local/share/pyshared/cgc"
+mkdir -p "$tools_path"
+cp "tools/*" $tools_path
+cp "tools/cwe_dict.csv" "/usr/local/share"
+
+#Configs
+config_path="/etc/cgcrepair"
+mkdir -p $config_path
+cp "config/cgcrepair.yml" $config_path
+
+#Polls
+polls_path="/usr/local/share/polls"
+mkdir -p $polls_path
+
+
+# Installs shared libraries
 cmake_opts=$CMAKE_OPTS
 platform_arch=$(uname -i)
 
