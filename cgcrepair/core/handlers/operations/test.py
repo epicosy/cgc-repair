@@ -42,8 +42,9 @@ class TestHandler(CommandsHandler):
 
             for test in tests.values():
                 cmd_str = self._cmd_str(test, working=working, challenge_name=challenge_paths.name)
-                super().__call__(cmd_str=' '.join(cmd_str), cmd_cwd=str(self.app.config.tools.root), timeout=timeout,
-                                 raise_err=False, exit_err=False, msg=f"Testing {test.name} on {test.file.name}\n")
+                super().__call__(cmd_str=' '.join(cmd_str), cmd_cwd=str(self.app.config.get_config('tools')),
+                                 timeout=timeout, raise_err=False, exit_err=False,
+                                 msg=f"Testing {test.name} on {test.file.name}\n")
                 test_outcome = self._process_result(test, challenge_name=challenge_paths.name)
                 test_outcome.instance_id = instance.id
                 test_outcome.co_id = instance.pointer
