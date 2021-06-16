@@ -6,6 +6,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, relationship
 from sqlalchemy import inspect
 
+from cgcrepair.core.corpus.challenge import Challenge
+from cgcrepair.core.corpus.cwe_parser import CWEParser
+from cgcrepair.core.corpus.manifest import Manifest
 from cgcrepair.core.interfaces import DatabaseInterface
 from cgcrepair.utils.data import WorkingPaths
 
@@ -55,6 +58,10 @@ class Metadata(Base):
     main_cwe = Column('main_cwe', String)
     povs = Column('povs', Integer)
 
+    def __str__(self):
+        return f"{self.name} | {self.main_cwe} | {self.povs} | {self.total_lines} | {self.vuln_lines} | " \
+               f"{self.patch_lines} | {self.vuln_files}"
+
 
 class Instance(Base):
     __tablename__ = "instance"
@@ -74,6 +81,9 @@ class Instance(Base):
                             build_root=build_root, build=build_root / Path(self.name),
                             cmake=build_root / Path(self.name, "CMakeFiles", f"{self.name}.dir"))
 
+    def __str__(self):
+        return f"{self.id} | {self.name} | {self.path} | {self.pointer}"
+
 
 class InstanceHandler(DatabaseInterface, Handler):
     class Meta:
@@ -84,6 +94,34 @@ class InstanceHandler(DatabaseInterface, Handler):
 
     def get_compile_outcome(self, instance_id: int):
         return self.app.db.query_attr(Instance, instance_id, 'compile_outcome')
+
+    def all(self):
+        return self.app.db.query(Instance)
+
+
+class MetadataHandler(DatabaseInterface, Handler):
+    class Meta:
+        label = 'metadata'
+
+    def __call__(self, challenge: Challenge):
+        cwe_parser = CWEParser(description=challenge.info(), level=self.app.config.get_config('cwe_level'))
+        manifest = Manifest(source_path=challenge.paths.source)
+
+        metadata = Metadata()
+        metadata.name = challenge.name
+        metadata.excluded = False
+        metadata.total_lines = manifest.total_lines
+        metadata.vuln_lines = manifest.vuln_lines
+        metadata.patch_lines = manifest.patch_lines
+        metadata.vuln_files = len(manifest.vuln_files)
+        metadata.main_cwe = cwe_parser.cwe_type()
+        # metadata.vulns = manifest.get_vulns()
+        # metadata.patches = manifest.get_patches()
+
+        return metadata
+
+    def all(self):
+        return self.app.db.query(Metadata)
 
 
 class Database:
@@ -97,7 +135,9 @@ class Database:
             session.flush()
             session.refresh(entity)
             session.expunge_all()
-            return entity.id
+
+            if hasattr(entity, 'id'):
+                return entity.id
 
     def has_table(self, name: str):
         inspector = inspect(self.engine)
@@ -108,7 +148,7 @@ class Database:
             if entity_id and hasattr(entity, 'id'):
                 results = session.query(entity).filter(entity.id == entity_id).first()
             else:
-                results = session.query(entity)
+                results = session.query(entity).all()
 
             session.expunge_all()
             return results

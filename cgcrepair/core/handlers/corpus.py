@@ -10,7 +10,7 @@ class CorpusHandler(CorpusInterface, Handler):
     class Meta:
         label = 'corpus'
 
-    def challenge(self, challenge_name: str):
+    def get(self, challenge_name: str):
         paths = self.get_challenge_paths(challenge_name)
         return Challenge(paths=paths)
 

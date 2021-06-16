@@ -1,24 +1,26 @@
-from os.path import dirname
-
 from cement import App, TestApp
 from cement.core.exc import CaughtSignal
+from .core.exc import CGCRepairError
 
-from cgcrepair.controllers.operations import Operations
+# Controllers
 from .controllers.base import Base
 from cgcrepair.controllers.simple_operation import SimpleOperations
-from .core.exc import CGCRepairError
+from cgcrepair.controllers.operations import Operations
+from cgcrepair.controllers.database import Database
+
+# Handlers
 from cgcrepair.core.handlers.configurations import YamlConfigurations
 from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.handlers.corpus import CorpusHandler
+from cgcrepair.core.handlers.database import MetadataHandler
 from cgcrepair.core.handlers.operations.checkout import CheckoutHandler
 from cgcrepair.core.handlers.operations.genpolls import GenPollsHandler
 from cgcrepair.core.handlers.database import InstanceHandler
 from cgcrepair.core.handlers.operations.make import MakeHandler
 from cgcrepair.core.handlers.operations.compile import CompileHandler
 from cgcrepair.core.handlers.operations.test import TestHandler
-from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface, CorpusInterface
 
-ROOT_DIR = dirname(dirname(__file__))
+from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface, CorpusInterface
 
 
 class CGCRepair(App):
@@ -41,8 +43,6 @@ class CGCRepair(App):
             'jinja2',
         ]
 
-        config_defaults = {'root': ROOT_DIR}
-
         # configuration handler
         config_handler = 'yaml_configurations'
 
@@ -60,7 +60,7 @@ class CGCRepair(App):
             Base, YamlConfigurations, CommandsHandler, CorpusHandler,
             SimpleOperations, CheckoutHandler, GenPollsHandler,
             Operations, MakeHandler, CompileHandler, TestHandler,
-            InstanceHandler
+            InstanceHandler, Database, MetadataHandler
         ]
 
 

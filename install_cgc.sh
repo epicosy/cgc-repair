@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Configs cores
+
+mkdir -p /cores
+echo '/cores/core.%h.%p.%E' | sudo tee /proc/sys/kernel/core_pattern
+
 # Installs corpus, tools, configs and paths
 
 corpus_path="/usr/local/src/cgc"

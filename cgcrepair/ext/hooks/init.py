@@ -1,10 +1,6 @@
 from pathlib import Path
 
-from cgcrepair.core.corpus.challenge import Challenge
-from cgcrepair.core.corpus.cwe_parser import CWEParser
-from cgcrepair.core.corpus.manifest import Manifest
 from cgcrepair.core.handlers.database import Metadata, Database
-
 from cgcrepair.utils.data import Tools
 
 
@@ -24,27 +20,14 @@ def init_metadata(app):
     if not database.query(Metadata):
 
         corpus_handler = app.handler.get('corpus', 'corpus', setup=True)
+        metadata_handler = app.handler.get('database', 'metadata', setup=True)
         challenges = corpus_handler.get_challenges()
         challenges_count = len(challenges)
 
         for i, challenge_name in enumerate(challenges):
             app.log.info(f"Processing {challenge_name} for metadata. {i}/{challenges_count}")
-            challenge_paths = corpus_handler.get_challenge_paths(challenge_name)
-            challenge = Challenge(challenge_paths)
-            cwe_parser = CWEParser(description=challenge.info(), level=app.config.get_config('cwe_level'))
-            manifest = Manifest(source_path=challenge_paths.source)
-
-            metadata = Metadata()
-            metadata.name = challenge_name
-            metadata.excluded = False
-            metadata.total_lines = manifest.total_lines
-            metadata.vuln_lines = manifest.vuln_lines
-            metadata.patch_lines = manifest.patch_lines
-            metadata.vuln_files = len(manifest.vuln_files)
-            metadata.main_cwe = cwe_parser.cwe_type()
-            # metadata.vulns = manifest.get_vulns()
-            # metadata.patches = manifest.get_patches()
-
+            challenge = corpus_handler.get(challenge_name)
+            metadata = metadata_handler(challenge)
             database.add(metadata)
 
     app.extend('db', database)
