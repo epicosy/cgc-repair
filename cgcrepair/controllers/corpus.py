@@ -1,9 +1,11 @@
 from cement import Controller, ex
 
+from cgcrepair.core.exc import CGCRepairError
 
-class SimpleOperations(Controller):
+
+class Corpus(Controller):
     class Meta:
-        label = 'simple_operations'
+        label = 'corpus'
         stacked_on = 'base'
         stacked_type = 'nested'
 
@@ -11,6 +13,16 @@ class SimpleOperations(Controller):
         arguments = [
             (['-cn', '--challenge'], {'help': 'The challenge name.', 'type': str, 'required': True}),
         ]
+
+    def _post_argument_parsing(self):
+        if 'challenge' in self.app.pargs:
+            # TODO: maybe add as well the metadata
+            corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+
+            if not corpus_handler.has(self.app.pargs.challenge):
+                raise CGCRepairError(f"No {self.app.pargs.challenge} challenge in the CGC Corpus")
+
+            self.challenge = corpus_handler.get(self.app.pargs.challenge)
 
     @ex(
         help='Checks out the specified challenge to a working directory.',

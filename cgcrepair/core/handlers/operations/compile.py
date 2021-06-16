@@ -3,7 +3,7 @@ from pathlib import Path
 
 from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.exc import CommandError
-from cgcrepair.core.handlers.database import CompileOutcome
+from cgcrepair.core.handlers.database import CompileOutcome, Instance
 from cgcrepair.core.handlers.operations.make import MakeHandler
 from cgcrepair.core.corpus.manifest import map_instrumented_files
 from cgcrepair.utils.data import WorkingPaths
@@ -29,15 +29,11 @@ class CompileHandler(MakeHandler):
             else:
                 self.fixes = self.app.pargs.fix_files
 
-    def run(self):
+    def run(self, instance: Instance, working: WorkingPaths):
         try:
             if self.fixes and self.app.pargs.inst_files and len(self.fixes) != len(self.app.pargs.inst_files):
                 error = f"The files [{self.fixes}] can not be mapped. Uneven number of files [{self.app.pargs.inst_files}]."
                 raise ValueError(error)
-
-            instance_handler = self.app.handler.get('database', 'instance', setup=True)
-            instance = instance_handler.get(instance_id=self.app.pargs.id)
-            working = instance.working()
 
             # Backups manifest files
             if self.app.pargs.backup:
@@ -49,7 +45,7 @@ class CompileHandler(MakeHandler):
                 self.build_instrumented(working)
             else:
                 self.app.log.info(f"Compiling {instance.name}.")
-                super().run()
+                super().run(instance, working)
                 super().__call__(cmd_str="cmake --build .", msg=f"Building {working.source.name}\n", raise_err=True,
                                  cmd_cwd=str(working.build_root))
                 self.app.log.info(f"Compiled {instance.name}.")

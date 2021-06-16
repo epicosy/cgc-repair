@@ -4,14 +4,14 @@ import binascii
 from os import listdir
 from pathlib import Path
 
-from cgcrepair.core.handlers.database import TestOutcome
+from cgcrepair.core.handlers.database import TestOutcome, Instance
 from cgcrepair.utils.parse.test_result import get_outcome, get_pids_sig, pov_signals
 from cgcrepair.utils.helpers import kill_by_name
 
 from cgcrepair.core.exc import CommandError
 from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.tests import Tests
-from cgcrepair.utils.data import Test, WorkingPaths
+from cgcrepair.utils.data import Test, WorkingPaths, ChallengePaths
 
 
 class TestHandler(CommandsHandler):
@@ -25,14 +25,8 @@ class TestHandler(CommandsHandler):
     def set(self):
         super().set()
 
-    def run(self):
+    def run(self, instance: Instance, working: WorkingPaths, challenge_paths: ChallengePaths):
         try:
-            instance_handler = self.app.handler.get('database', 'instance', setup=True)
-            instance = instance_handler.get(instance_id=self.app.pargs.id)
-            corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
-            challenge_paths = corpus_handler.get_challenge_paths(instance.name)
-            working = instance.working()
-
             tests = Tests(polls_path=challenge_paths.polls, povs_path=working.build, tests=self.app.pargs.tests,
                           pos_tests=self.app.pargs.pos_tests, neg_tests=self.app.pargs.neg_tests,
                           only_numbers=self.app.pargs.only_numbers)

@@ -1,6 +1,8 @@
 from cement import Controller, ex
 from cement.ext.ext_argparse import ArgparseArgumentHandler
 
+from cgcrepair.core.exc import CGCRepairError
+
 make_args = [
     (['-wba', '--write_build_args'], {'help': 'File to output build args.', 'type': str, 'default': None}),
     (['-ctp', '--compiler_trail_path'], {'help': "Trail's compile commands path to compiler",
@@ -9,7 +11,9 @@ make_args = [
                               'default': None}),
     (['-ee', '--exit_err'], {'help': 'Exits when error occurred.', 'action': 'store_false', 'required': False}),
     (['-R', '--replace'], {'help': 'Replaces output extension.', 'action': 'store_true'}),
-    (['-T', '--tag'], {'help': 'Flag for tracking sanity check.', 'action': 'store_true', 'required': False})
+    (['-T', '--tag'], {'help': 'Flag for tracking sanity check.', 'action': 'store_true', 'required': False}),
+    (['-wd', '--working_dir'], {'help': 'Overwrites the working directory to the specified path', 'type': str,
+                                'required': False})
 ]
 
 # Exclusive arguments for test command
@@ -29,15 +33,27 @@ print_group.add_argument('-P', '--print_class', help='Flag for printing testcase
                          action='store_true')
 
 
-class Operations(Controller):
+class Instance(Controller):
     class Meta:
-        label = 'operations'
+        label = 'instance'
         stacked_on = 'base'
         stacked_type = 'nested'
 
         arguments = [
             (['--id'], {'help': 'The id of the instance (challenge checked out).', 'type': str, 'required': True}),
         ]
+
+    def _post_argument_parsing(self):
+        if 'id' in self.app.pargs:
+            instance_handler = self.app.handler.get('database', 'instance', setup=True)
+            self.instance = instance_handler.get(instance_id=self.app.pargs.id)
+            self.working = self.instance.working()
+
+            if not self.instance.path:
+                raise CGCRepairError('Working directory is required. Checkout again the working directory')
+
+            if not self.working.root.exists():
+                raise CGCRepairError('Working directory does not exist.')
 
     @ex(
         help='Cmake init of the Makefiles.',
@@ -46,7 +62,7 @@ class Operations(Controller):
     def make(self):
         make_handler = self.app.handler.get('commands', 'make', setup=True)
         make_handler.set()
-        make_handler.run()
+        make_handler.run(self.instance, self.working)
         make_handler.save_outcome()
 
         if make_handler.error:
@@ -74,7 +90,7 @@ class Operations(Controller):
     def compile(self):
         compile_handler = self.app.handler.get('commands', 'compile', setup=True)
         compile_handler.set()
-        compile_handler.run()
+        compile_handler.run(self.instance, self.working)
         compile_handler.save_outcome()
 
         if compile_handler.error:
@@ -99,8 +115,10 @@ class Operations(Controller):
     )
     def test(self):
         test_handler = self.app.handler.get('commands', 'test', setup=True)
+        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+        challenge_paths = corpus_handler.get_challenge_paths(self.instance.name)
         test_handler.set()
-        test_handler.run()
+        test_handler.run(self.instance, self.working, challenge_paths)
 
         if test_handler.error:
             self.app.log.error(test_handler.error)

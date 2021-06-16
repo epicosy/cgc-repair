@@ -35,7 +35,7 @@ class CommandsHandler(CommandsInterface, Handler):
         else:
             self.env["LD_LIBRARY_PATH"] = ld_lib_path
 
-    def run(self):
+    def run(self, **kwargs):
         pass
 
     def unset(self):

@@ -46,7 +46,7 @@ class CheckoutHandler(CommandsHandler):
     def _mkdir(self):
         # Make working directory
         if self.app.pargs.working_dir:
-            working_dir = self.app.pargs.working_dir
+            working_dir = Path(self.app.pargs.working_dir)
         else:
             if self.app.pargs.seed:
                 seed = self.app.pargs.seed

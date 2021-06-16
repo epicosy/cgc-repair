@@ -4,8 +4,8 @@ from .core.exc import CGCRepairError
 
 # Controllers
 from .controllers.base import Base
-from cgcrepair.controllers.simple_operation import SimpleOperations
-from cgcrepair.controllers.operations import Operations
+from cgcrepair.controllers.corpus import Corpus
+from cgcrepair.controllers.instance import Instance
 from cgcrepair.controllers.database import Database
 
 # Handlers
@@ -58,8 +58,8 @@ class CGCRepair(App):
         # register handlers
         handlers = [
             Base, YamlConfigurations, CommandsHandler, CorpusHandler,
-            SimpleOperations, CheckoutHandler, GenPollsHandler,
-            Operations, MakeHandler, CompileHandler, TestHandler,
+            Corpus, CheckoutHandler, GenPollsHandler,
+            Instance, MakeHandler, CompileHandler, TestHandler,
             InstanceHandler, Database, MetadataHandler
         ]
 

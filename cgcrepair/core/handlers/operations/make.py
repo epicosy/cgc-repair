@@ -64,12 +64,8 @@ class MakeHandler(CommandsHandler):
         super().__call__(cmd_str=f"cmake {self.cmake_opts} {source} -DCB_PATH:STRING={name}",
                          msg="Creating build files.", cmd_cwd=str(dest), raise_err=True)
 
-    def run(self):
+    def run(self, instance: Instance, working: WorkingPaths):
         try:
-            instance_handler = self.app.handler.get('database', 'instance', setup=True)
-            instance = instance_handler.get(instance_id=self.app.pargs.id)
-            working = instance.working()
-
             self._make(working.root, instance.name, working.build_root)
 
             if self.app.pargs.write_build_args:
