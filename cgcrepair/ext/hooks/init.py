@@ -15,7 +15,10 @@ def bind_tools(app):
 
 
 def init_metadata(app):
-    database = Database(debug=app.config.get_config('debug'))
+    database = Database(dialect=app.config.get_config('dialect'), username=app.config.get_config('username'),
+                        password=app.config.get_config('password'), host=app.config.get_config('host'),
+                        port=app.config.get_config('port'), database=app.config.get_config('database'),
+                        debug=app.config.get_config('debug'))
 
     if not database.query(Metadata):
 

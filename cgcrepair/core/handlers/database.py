@@ -125,8 +125,9 @@ class MetadataHandler(DatabaseInterface, Handler):
 
 
 class Database:
-    def __init__(self, debug: bool = False):
-        self.engine = create_engine('sqlite:///:memory', echo=debug)
+    def __init__(self, dialect: str, username: str, password: str, host: str, port: int, database: str,
+                 debug: bool = False):
+        self.engine = create_engine(f"{dialect}://{username}:{password}@{host}:{port}/{database}", echo=debug)
         Base.metadata.create_all(bind=self.engine)
 
     def add(self, entity: Base):

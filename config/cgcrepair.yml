@@ -42,6 +42,14 @@ cgcrepair:
 ### CWE Parsing
   cwe_level: 3
 
+### Database configs
+  dialect: 'postgresql'
+  username: 'cgcrepair'
+  password: 'cgcrepair123'
+  host: 'localhost'
+  port: '5432'
+  database: 'cgcrepair'
+
 
 log.colorlog:
 
