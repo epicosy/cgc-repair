@@ -58,7 +58,7 @@ class CheckoutHandler(CommandsHandler):
         self.app.log.info(f"Checking out {self.app.pargs.challenge} to {working_dir}.")
 
         if working_dir.exists():
-            if any(working_dir.iterdir()):
+            if any(working_dir.iterdir()) and not self.app.pargs.force:
                 raise NotEmptyDirectory(f"Working directory {working_dir} exists and is not empty.")
         else:
             self.app.log.info("Creating working directory.")

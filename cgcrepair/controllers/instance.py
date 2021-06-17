@@ -47,6 +47,11 @@ class Instance(Controller):
         if 'id' in self.app.pargs:
             instance_handler = self.app.handler.get('database', 'instance', setup=True)
             self.instance = instance_handler.get(instance_id=self.app.pargs.id)
+
+            if not self.instance:
+                raise CGCRepairError(f"No instance {self.app.pargs.id} found. "
+                                     f"Use the ID supplied by the checkout command")
+
             self.working = self.instance.working()
 
             if not self.instance.path:

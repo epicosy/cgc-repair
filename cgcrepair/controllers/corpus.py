@@ -32,7 +32,9 @@ class Corpus(Controller):
               'dest': 'no_patch'}),
             (['-wd', '--working_directory'], {'help': 'The working directory.', 'type': str, 'required': False,
                                               'dest': 'working_dir'}),
-            (['-S', '--seed'], {'help': "Random seed", 'required': False, 'type': int})
+            (['-S', '--seed'], {'help': "Random seed", 'required': False, 'type': int}),
+            (['-F', '--force'], {'help': "Forces to checkout to existing directory", 'required': False,
+                                 'action': 'store_true'})
         ]
     )
     def checkout(self):
