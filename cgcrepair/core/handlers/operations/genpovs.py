@@ -17,7 +17,6 @@ class GenPOVsHandler(CommandsHandler):
 
     def set(self):
         super().set()
-        assert self.app.pargs.count > 0
 
     def compile_povs(self, challenge_paths: ChallengePaths):
         challenge = Challenge(challenge_paths)
