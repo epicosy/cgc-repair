@@ -172,13 +172,13 @@ class CompileHandler(MakeHandler):
 
         povs = [str(f.name) for f in challenge.paths.source.iterdir() if f.name.startswith('pov') and f.is_dir()]
         povs.sort()
-        targets = ' '.join([f"{challenge.name}_{pov}" for pov in povs])
-        # make files /usr/local/share/povs/FablesReport/FablesReport/
+
         super()._make(source=self.app.config.get_config('corpus'), name=challenge.name, dest=build_dir)
-        # build shared objects
-        super().__call__(cmd_str=f"cmake --build . --target {targets}", msg=f"Building {challenge.name} POVs",
-                         raise_err=True, cmd_cwd=str(build_dir))
+
+        # build povs
         for pov in povs:
+            super().__call__(cmd_str=f"cmake --build . --target {challenge.name}_{pov}", cmd_cwd=str(build_dir),
+                             raise_err=True, msg=f"Building {challenge.name} POVs")
             shutil.copy2(f"{build_dir}/{challenge.name}/{pov}.pov", challenge.paths.povs)
 
         self.app.log.info(f"Built POVs for {challenge.name}.")
