@@ -27,7 +27,7 @@ class TestHandler(CommandsHandler):
 
     def run(self, instance: Instance, working: WorkingPaths, challenge_paths: ChallengePaths):
         try:
-            tests = Tests(polls_path=challenge_paths.polls, povs_path=working.build, tests=self.app.pargs.tests,
+            tests = Tests(polls_path=challenge_paths.polls, povs_path=challenge_paths.povs, tests=self.app.pargs.tests,
                           pos_tests=self.app.pargs.pos_tests, neg_tests=self.app.pargs.neg_tests,
                           only_numbers=self.app.pargs.only_numbers)
 

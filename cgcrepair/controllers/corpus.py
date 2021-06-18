@@ -59,3 +59,19 @@ class Corpus(Controller):
 
         if genpolls_handler.error:
             self.app.log.error(genpolls_handler.error)
+
+
+    @ex(
+        help='Generates polls for challenge. Theses are the positive tests.',
+        arguments=[
+            (['-n', '--count'], {'help': 'Number of traversals through the state graph per round', 'type': int,
+                                 'default': 100})
+        ]
+    )
+    def genpovs(self):
+        genpovs_handler = self.app.handler.get('commands', 'genpovs', setup=True)
+        genpovs_handler.set()
+        genpovs_handler.run()
+
+        if genpovs_handler.error:
+            self.app.log.error(genpovs_handler.error)

@@ -46,7 +46,8 @@ class CompileHandler(MakeHandler):
             else:
                 self.app.log.info(f"Compiling {instance.name}.")
                 super().run(instance, working)
-                super().__call__(cmd_str="cmake --build .", msg=f"Building {working.source.name}\n", raise_err=True,
+                super().__call__(cmd_str=f"cmake --build . --target {instance.name}",
+                                 msg=f"Building {working.source.name}\n", raise_err=True,
                                  cmd_cwd=str(working.build_root))
                 self.app.log.info(f"Compiled {instance.name}.")
 
@@ -151,7 +152,7 @@ class CompileHandler(MakeHandler):
                 # make files
                 super()._make(source=self.app.config.get_config('corpus'), name=challenge.name, dest=build)
                 # build shared objects
-                super().__call__(cmd_str=f"cmake --build . --target {challenge_id}", msg=f"Building {challenge_id}\n",
+                super().__call__(cmd_str=f"cmake --build . --target {challenge_id}", msg=f"Building {challenge_id}",
                                  raise_err=True, cmd_cwd=str(build))
 
                 # install shared objects
@@ -161,3 +162,25 @@ class CompileHandler(MakeHandler):
                 self.app.log.info(f"Installed shared objects.")
 
                 shutil.rmtree(str(build))
+
+    def build_povs(self, challenge: Challenge):
+        if not challenge.paths.povs.exists():
+            self.app.log.info(f"Creating directory for {challenge.name} POVs.")
+            challenge.paths.povs.mkdir(parents=True)
+
+        build_dir = Path('/tmp', challenge.name + "_povs")
+
+        povs = [str(f.name) for f in challenge.paths.source.iterdir() if f.name.startswith('pov') and f.is_dir()]
+        povs.sort()
+        targets = ' '.join([f"{challenge.name}_{pov}" for pov in povs])
+        # make files /usr/local/share/povs/FablesReport/FablesReport/
+        super()._make(source=self.app.config.get_config('corpus'), name=challenge.name, dest=build_dir)
+        # build shared objects
+        super().__call__(cmd_str=f"cmake --build . --target {targets}", msg=f"Building {challenge.name} POVs",
+                         raise_err=True, cmd_cwd=str(build_dir))
+        for pov in povs:
+            shutil.copy2(f"{build_dir}/{challenge.name}/{pov}.pov", challenge.paths.povs)
+
+        self.app.log.info(f"Built POVs for {challenge.name}.")
+
+        shutil.rmtree(str(build_dir))

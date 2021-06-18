@@ -93,6 +93,9 @@ if(DEFINED ENV{COVERAGE})
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
 endif()
 
+# set environment C flags
+set(CMAKE_C_FLAGS $ENV{CMAKE_C_FLAGS})
+
 # Include all libraries
 include_directories($ENV{CGC_INCLUDE_DIR})
 

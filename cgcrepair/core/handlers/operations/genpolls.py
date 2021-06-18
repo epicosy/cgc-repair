@@ -24,6 +24,7 @@ class GenPollsHandler(CommandsHandler):
         challenge = Challenge(challenge_paths)
         compile_handler = self.app.handler.get('commands', 'compile', setup=True)
 
+        # TODO: clean this junk
         self.app.pargs.replace = None
         self.app.pargs.save_temps = None
         self.app.pargs.coverage = None
