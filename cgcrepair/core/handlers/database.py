@@ -79,7 +79,8 @@ class Instance(Base):
 
         return WorkingPaths(root=working_dir, source=working_dir / Path(self.name),
                             build_root=build_root, build=build_root / Path(self.name),
-                            cmake=build_root / Path(self.name, "CMakeFiles", f"{self.name}.dir"))
+                            cmake=build_root / Path(self.name, "CMakeFiles", f"{self.name}.dir"),
+                            binary=build_root / self.name / self.name)
 
     def __str__(self):
         return f"{self.id} | {self.name} | {self.path} | {self.pointer}"

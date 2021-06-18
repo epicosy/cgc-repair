@@ -62,11 +62,7 @@ class Corpus(Controller):
 
 
     @ex(
-        help='Generates polls for challenge. Theses are the positive tests.',
-        arguments=[
-            (['-n', '--count'], {'help': 'Number of traversals through the state graph per round', 'type': int,
-                                 'default': 100})
-        ]
+        help='Builds the POVs for the challenge. Theses are the negative tests.',
     )
     def genpovs(self):
         genpovs_handler = self.app.handler.get('commands', 'genpovs', setup=True)

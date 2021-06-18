@@ -36,6 +36,11 @@ class CheckoutHandler(CommandsHandler):
             self.instance.path = str(working_dir)
             _id = self.app.db.add(self.instance)
 
+            # write the instance id to a file inside the working directory
+            # useful to use in external scripts and to keep track locally of instances
+            with (working_dir / '.instance_id').open(mode='w') as oid:
+                oid.write(str(_id))
+
             self.app.log.info(f"Checked out {self.app.pargs.challenge} with id {_id}")
 
         except Exception as e:

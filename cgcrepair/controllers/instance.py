@@ -40,7 +40,7 @@ class Instance(Controller):
         stacked_type = 'nested'
 
         arguments = [
-            (['--id'], {'help': 'The id of the instance (challenge checked out).', 'type': str, 'required': True}),
+            (['--id'], {'help': 'The id of the instance (challenge checked out).', 'type': int, 'required': True}),
         ]
 
     def _post_argument_parsing(self):
@@ -122,6 +122,7 @@ class Instance(Controller):
         test_handler = self.app.handler.get('commands', 'test', setup=True)
         corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
         challenge_paths = corpus_handler.get_challenge_paths(self.instance.name)
+
         test_handler.set()
         test_handler.run(self.instance, self.working, challenge_paths)
 

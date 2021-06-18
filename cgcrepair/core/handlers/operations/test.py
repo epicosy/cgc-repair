@@ -1,7 +1,6 @@
 import os
 import binascii
 
-from os import listdir
 from pathlib import Path
 
 from cgcrepair.core.handlers.database import TestOutcome, Instance
@@ -35,7 +34,7 @@ class TestHandler(CommandsHandler):
             timeout = self.get_timeout()
 
             for test in tests.values():
-                cmd_str = self._cmd_str(test, working=working, challenge_name=challenge_paths.name)
+                cmd_str = self._cmd_str(test, working=working)
                 super().__call__(cmd_str=' '.join(cmd_str), cmd_cwd=str(self.app.config.get_config('tools')),
                                  timeout=timeout, raise_err=False, exit_err=False,
                                  msg=f"Testing {test.name} on {test.file.name}\n")
@@ -104,15 +103,9 @@ class TestHandler(CommandsHandler):
             elif not self.app.pargs.neg_pov:
                 self.failed = True
 
-    def _cmd_str(self, test: Test, working: WorkingPaths, challenge_name: str):
-        # Collect the names of binaries to be tested
-        cb_dirs = [el for el in listdir(str(working.source)) if el.startswith('cb_')]
+    def _cmd_str(self, test: Test, working: WorkingPaths):
+        bin_names = working.get_binaries()
 
-        if len(cb_dirs) > 0:
-            # There are multiple binaries in this challenge
-            bin_names = ['{}_{}'.format(challenge_name, i + 1) for i in range(len(cb_dirs))]
-        else:
-            bin_names = [challenge_name]
         # use timeout or duration from sanity check
         timeout = self.get_timeout()
         python2 = self.app.config.get_config('python2')

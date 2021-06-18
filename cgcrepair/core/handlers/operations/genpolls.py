@@ -89,7 +89,12 @@ class GenPollsHandler(CommandsHandler):
                               f"--store_seed --depth 1048575 {state_machine_script} {state_graph} {self.out_dir}"
 
                     super().__call__(cmd_str=cmd_str, msg=f"Generating polls for {challenge_paths.name}.\n",
-                                     cmd_cwd=str(challenge_paths.source), raise_err=True)
+                                     cmd_cwd=str(challenge_paths.source), raise_err=False)
+                    if self.error:
+                        if 'AssertionError' in self.error:
+                            self.app.log.warning(self.error)
+                        else:
+                            raise CommandError(self.error)
 
                     self.app.log.info(f"Generated polls for {challenge_paths.name}.")
                     break

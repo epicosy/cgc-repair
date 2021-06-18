@@ -56,21 +56,23 @@ class Tests:
 
     def load_pos_tests(self):
         if not self.pos_tests:
-            tests = self.get_polls()
-            tests.sort()
             # Map cases to tests names where p is for positive test cases
-            for i, file in enumerate(tests, 1):
+            for i, file in enumerate(sorted(self.get_polls()), 1):
                 test = Test(name=f"p{i}", is_pov=False, file=file, order=i)
                 self.pos_tests[test.name] = test
 
+            if not self.pos_tests:
+                raise ValueError('No polls found')
+
     def load_neg_tests(self):
         if not self.neg_tests:
-            neg_tests = self.get_povs()
-            neg_tests.sort()
             # Map cases to tests names where n is for negative test cases
-            for i, file in enumerate(neg_tests, 1):
+            for i, file in enumerate(sorted(self.get_povs()), 1):
                 test = Test(name=f"n{i}", is_pov=True, file=file, order=i)
                 self.neg_tests[test.name] = test
+
+            if not self.neg_tests:
+                raise ValueError('No POVs found')
 
     def get_polls(self):
         for_release = self.polls_path / Path('for-release')
@@ -83,7 +85,6 @@ class Tests:
             return [file for file in for_release.iterdir() if file.suffix == ".xml"]
 
     def get_povs(self):
-        # return [str(f) for f in self.povs_path.iterdir() if f.name.startswith('pov')]
         return [file for file in self.povs_path.iterdir() if file.suffix == ".pov"]
 
     def map_only_number_ids(self):
