@@ -69,7 +69,7 @@ class CommandsHandler(CommandsInterface, Handler):
         if msg and self.app.pargs.verbose:
             self.app.log.info(msg)
 
-        self.app.log.debug(cmd_str, __name__)
+        self.app.log.debug(cmd_str, cmd_cwd)
 
         # based on https://stackoverflow.com/a/28319191
         with subprocess.Popen(args=cmd_str, shell=isinstance(cmd_str, str), stdout=subprocess.PIPE,

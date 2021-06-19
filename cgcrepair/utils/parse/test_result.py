@@ -100,7 +100,7 @@ def polls_failed(output: str):
     if match:
         return int(match.group(1))
 
-    return None
+    return 0
 
 
 def get_not_ok(output: str):

@@ -57,7 +57,7 @@ class CompileHandler(MakeHandler):
             self.unset()
 
     def unset(self):
-        if self.app.pargs.coverage:
+        if self.app.pargs.coverage and 'COVERAGE' in self.env:
             del self.env['COVERAGE']
 
     def _backup_manifest_files(self, working: WorkingPaths):
