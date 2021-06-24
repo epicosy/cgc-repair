@@ -33,6 +33,11 @@ class TestOutcome(Base):
     failed = Column('failed', Integer, nullable=True)
     total = Column('total', Integer, nullable=False)
 
+    def __str__(self):
+        clean_error = self.error.strip().replace('\n', ' ') if self.error else ''
+        return f"{self.id} | {self.co_id} | {self.name} | {clean_error} | {self.exit_status} | {self.passed} | " \
+               f"{self.duration} | {self.is_pov} | {self.sig} | {self.failed} | {self.total}"
+
 
 class CompileOutcome(Base):
     __tablename__ = "compile_outcome"
@@ -44,6 +49,10 @@ class CompileOutcome(Base):
     error = Column('error', String, nullable=True)
     tag = Column('tag', String, nullable=False)
     exit_status = Column('exit_status', Integer)
+
+    def __str__(self):
+        clean_error = self.error.strip().replace('\n', ' ') if self.error else ''
+        return f"{self.id} | {clean_error} | {self.tag} | {self.exit_status}"
 
 
 class Metadata(Base):
@@ -96,6 +105,9 @@ class InstanceHandler(DatabaseInterface, Handler):
 
     def get_compile_outcome(self, instance_id: int):
         return self.app.db.query_attr(Instance, instance_id, 'compile_outcome')
+
+    def get_test_outcome(self, instance_id: int):
+        return self.app.db.query_attr(Instance, instance_id, 'test_outcome')
 
     def all(self):
         return self.app.db.query(Instance)
