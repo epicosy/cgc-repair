@@ -36,11 +36,8 @@ class GenPollsHandler(CommandsHandler):
         if compile_handler.error:
             raise CommandError(compile_handler.error)
 
-    def run(self):
+    def run(self, challenge_paths: ChallengePaths):
         try:
-            corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
-            challenge_paths = corpus_handler.get_challenge_paths(self.app.pargs.challenge)
-
             self.install_shared_objects(challenge_paths)
 
             if challenge_paths.polls.exists():

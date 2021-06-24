@@ -40,7 +40,7 @@ class Corpus(Controller):
     def checkout(self):
         checkout_handler = self.app.handler.get('commands', 'checkout', setup=True)
         checkout_handler.set()
-        checkout_handler.run()
+        checkout_handler.run(self.challenge)
 
         if checkout_handler.error:
             self.app.log.error(checkout_handler.error)
@@ -54,12 +54,13 @@ class Corpus(Controller):
     )
     def genpolls(self):
         genpolls_handler = self.app.handler.get('commands', 'genpolls', setup=True)
+        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+        challenge_paths = corpus_handler.get_challenge_paths(self.app.pargs.challenge)
         genpolls_handler.set()
-        genpolls_handler.run()
+        genpolls_handler.run(challenge_paths)
 
         if genpolls_handler.error:
             self.app.log.error(genpolls_handler.error)
-
 
     @ex(
         help='Builds the POVs for the challenge. Theses are the negative tests.',
@@ -67,7 +68,7 @@ class Corpus(Controller):
     def genpovs(self):
         genpovs_handler = self.app.handler.get('commands', 'genpovs', setup=True)
         genpovs_handler.set()
-        genpovs_handler.run()
+        genpovs_handler.run(self.challenge)
 
         if genpovs_handler.error:
             self.app.log.error(genpovs_handler.error)

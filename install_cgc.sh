@@ -22,9 +22,12 @@ config_path="/etc/cgcrepair"
 mkdir -p $config_path
 cp "config/cgcrepair.yml" $config_path
 
-#Polls
+#Polls and Povs
 polls_path="/usr/local/share/polls"
+polls_lib_path="/usr/local/lib/cgc/polls"
 mkdir -p $polls_path
+mkdir -p $polls_lib_path
+mkdir -p "/usr/local/share/povs"
 
 
 # Installs shared libraries

@@ -3,6 +3,7 @@ from binascii import b2a_hex
 from os import urandom
 from pathlib import Path
 
+from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.exc import NotEmptyDirectory
 from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.corpus.manifest import Manifest
@@ -23,17 +24,18 @@ class CheckoutHandler(CommandsHandler):
         if not self.app.pargs.no_patch:
             self.env["PATCH"] = "True"
 
-    def run(self):
+    def run(self, challenge: Challenge):
         try:
             working_dir = self._mkdir()
-            working_dir_source = working_dir / self.app.pargs.challenge
+            working_dir_source = working_dir / challenge.name
 
             self._checkout_files(working_dir, working_dir_source)
             self._write_manifest(working_dir_source)
 
             # Inserting instance into database
-            self.instance.name = self.app.pargs.challenge
+            self.instance.name = challenge.name
             self.instance.path = str(working_dir)
+            #self.instance.has_patch = False if self.app.pargs.no_patch else True
             _id = self.app.db.add(self.instance)
 
             # write the instance id to a file inside the working directory
@@ -41,7 +43,7 @@ class CheckoutHandler(CommandsHandler):
             with (working_dir / '.instance_id').open(mode='w') as oid:
                 oid.write(str(_id))
 
-            self.app.log.info(f"Checked out {self.app.pargs.challenge} with id {_id}")
+            self.app.log.info(f"Checked out {challenge.name} with id {_id}")
 
         except Exception as e:
             self.error = str(e)

@@ -66,6 +66,9 @@ class MakeHandler(CommandsHandler):
 
     def run(self, instance: Instance, working: WorkingPaths):
         try:
+            #if instance.has_patch:
+            #    self.env["PATCH"] = "True"
+
             self._make(working.root, instance.name, working.build_root)
 
             if self.app.pargs.write_build_args:

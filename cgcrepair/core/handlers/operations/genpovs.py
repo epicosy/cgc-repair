@@ -18,27 +18,20 @@ class GenPOVsHandler(CommandsHandler):
     def set(self):
         super().set()
 
-    def compile_povs(self, challenge_paths: ChallengePaths):
-        challenge = Challenge(challenge_paths)
-        compile_handler = self.app.handler.get('commands', 'compile', setup=True)
-
-        self.app.pargs.replace = None
-        self.app.pargs.save_temps = None
-        self.app.pargs.coverage = None
-        self.app.pargs.fix_files = None
-
-        compile_handler.set()
-        compile_handler.build_povs(challenge)
-
-        if compile_handler.error:
-            raise CommandError(compile_handler.error)
-
-    def run(self):
+    def run(self, challenge: Challenge):
         try:
-            corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
-            challenge_paths = corpus_handler.get_challenge_paths(self.app.pargs.challenge)
+            compile_handler = self.app.handler.get('commands', 'compile', setup=True)
 
-            self.compile_povs(challenge_paths)
+            self.app.pargs.replace = None
+            self.app.pargs.save_temps = None
+            self.app.pargs.coverage = None
+            self.app.pargs.fix_files = None
+
+            compile_handler.set()
+            compile_handler.build_povs(challenge)
+
+            if compile_handler.error:
+                raise CommandError(compile_handler.error)
 
         except CommandError as ce:
             self.error = str(ce)

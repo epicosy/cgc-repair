@@ -70,6 +70,7 @@ class Instance(Base):
     name = Column('name', String)
     path = Column('path', String)
     pointer = Column('pointer', Integer, nullable=True)
+    #has_patch = Column('has_patch', Boolean, nullable=False)
     test_outcome = relationship("TestOutcome", back_populates="instance")
     compile_outcome = relationship("CompileOutcome", back_populates="instance")
 

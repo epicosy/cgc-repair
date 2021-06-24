@@ -64,6 +64,9 @@ class TestHandler(CommandsHandler):
             if not f.is_dir():
                 continue
 
+            if not list(f.rglob("*.gcno")):
+                continue
+
             gcov = self.app.config.get_config('gcov')
             super().__call__(cmd_str=f"{gcov} *.gcno", cmd_cwd=str(f))
             super().__call__(cmd_str=f"{gcov} *.gcda", cmd_cwd=str(f), msg=f"Generating coverage files")
