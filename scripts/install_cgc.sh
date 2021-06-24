@@ -2,9 +2,14 @@
 
 # Configs cores
 
-mkdir -p /cores
-echo '/cores/core.%h.%p.%E' | sudo tee /proc/sys/kernel/core_pattern
+#mkdir -p /cores
+#echo '/cores/core.%h.%p.%E' | sudo tee /proc/sys/kernel/core_pattern
 
+# Install dependencies
+apt-get install -y libc6-dev gcc-multilib g++-multilib gdb python-dev software-properties-common cmake
+[[ $? -eq 1 ]] && echo "[Error] Failed to install cgc-repair dependencies." && exit 1 ;
+
+echo "cgc-repair repair dependencies installed"
 # Installs corpus, tools, configs and paths
 
 corpus_path="/usr/local/src/cgc"
@@ -13,24 +18,20 @@ mkdir -p $corpus_path
 
 #Tools
 tools_path="/usr/local/share/pyshared/cgc"
-mkdir -p "$tools_path"
-cp -r tools/* $tools_path
-cp "tools/cwe_dict.csv" "/usr/local/share"
+mkdir -p "$tools_path" && cp -r tools/* $tools_path && cp "tools/cwe_dict.csv" "/usr/local/share"
+[[ $? -eq 1 ]] && echo "[Error] Failed to install cgc-repair tools." && exit 1 ;
 
 #Configs
 config_path="/etc/cgcrepair"
-mkdir -p $config_path
-cp "config/cgcrepair.yml" $config_path
+mkdir -p $config_path && cp "config/cgcrepair.yml" $config_path
+[[ $? -eq 1 ]] && echo "[Error] Failed to install cgc-repair configs." && exit 1 ;
 
-#Polls and Povs
-polls_path="/usr/local/share/polls"
-polls_lib_path="/usr/local/lib/cgc/polls"
-mkdir -p $polls_path
-mkdir -p $polls_lib_path
-mkdir -p "/usr/local/share/povs"
-
+#Polls and Povs Directories
+mkdir -p "/usr/local/share/polls" && mkdir -p "/usr/local/lib/cgc/polls" && mkdir -p "/usr/local/share/povs"
+[[ $? -eq 1 ]] && echo "[Error] Failed to create Polls and POVs directories for cgc-repair." && exit 1 ;
 
 # Installs shared libraries
+# shellcheck disable=SC2153
 cmake_opts=$CMAKE_OPTS
 platform_arch=$(uname -i)
 
@@ -48,9 +49,8 @@ build_dir="/opt/cgc_repair"
 current_dir=`pwd`
 include_src_dir="$current_dir/lib/include"
 mkdir -p "$build_dir"
-cd "$build_dir"
 
-cmake "$cmake_opts" $include_src_dir
+cd "$build_dir" && cmake "$cmake_opts" $include_src_dir
 [[ $? -eq 1 ]] && echo "[Error] cmake config failed" && exit 1 ;
 
 cmake --build .
@@ -59,4 +59,4 @@ cmake --build .
 cmake --build . --target install
 [[ $? -eq 1 ]] && echo "[Error] cmake install failed" && exit 1 ;
 
-echo "cgc include libraries installed"
+echo "cgc-repair include libraries installed"
