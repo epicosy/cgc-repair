@@ -43,7 +43,7 @@ class CheckoutHandler(CommandsHandler):
             with (working_dir / '.instance_id').open(mode='w') as oid:
                 oid.write(str(_id))
 
-            self.app.log.info(f"Checked out {challenge.name} with id {_id}")
+            print(f"Checked out {challenge.name} with id {_id}")
 
         except Exception as e:
             self.error = str(e)

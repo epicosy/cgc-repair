@@ -10,9 +10,15 @@ IGNORE = ("polls", "poller", "support")
 
 
 class Manifest:
-    def __init__(self, source_path: Path):
+    def __init__(self, source_path: Path, out_dir: str = None):
         self.root = source_path
-        self.file = source_path / 'manifest'
+
+        if out_dir:
+            out_dir = Path(out_dir)
+            self.file = out_dir / 'manifest' if out_dir.is_dir() else out_dir
+        else:
+            self.file = source_path / 'manifest'
+
         self.vuln_file = source_path / 'vuln'
         self.source_files: Dict[(str, SourceFile)] = {}
         self.vuln_files: Dict[(str, SourceFile)] = {}

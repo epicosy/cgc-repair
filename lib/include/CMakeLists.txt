@@ -26,8 +26,9 @@ if(BUILD_STATIC_LIBS AND LINUX)
 	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 endif()
-
+set(LIB_DESTINATION "/usr/local/lib64/cgc/")
 if(DEFINED ENV{M32})
+    set(LIB_DESTINATION "/usr/local/lib32/cgc/")
     set(CMAKE_C_FLAGS_INIT -m32)
     set(CMAKE_CXX_FLAGS_INIT -m32)
     set(CMAKE_ASM_FLAGS_INIT -m32)
@@ -72,7 +73,7 @@ add_subdirectory(tiny-AES128-C)
 add_subdirectory(libpov)
 
 set_target_properties(cgc PROPERTIES PUBLIC_HEADER "libcgc.h;ansi_x931_aes128.h")
-INSTALL(TARGETS cgc 
-        LIBRARY DESTINATION /usr/local/lib/cgc
+INSTALL(TARGETS cgc
+        LIBRARY DESTINATION ${LIB_DESTINATION}
         PUBLIC_HEADER DESTINATION /usr/local/include/cgc
 )

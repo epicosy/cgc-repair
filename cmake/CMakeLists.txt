@@ -65,15 +65,15 @@ else(WIN32)
     if(DEFINED ENV{M32})
         # Link everything 32-bit
 
-        set(CMAKE_C_FLAGS_INIT "${CMAKE_C_FLAGS_INIT} -m32")
-        set(CMAKE_CXX_FLAGS_INIT "${CMAKE_CXX_FLAGS_INIT} -m32")
-        set(CMAKE_ASM_FLAGS_INIT "${CMAKE_ASM_FLAGS_INIT} -m32")
+        set(CMAKE_C_FLAGS_INIT -m32)
+        set(CMAKE_CXX_FLAGS_INIT -m32)
+        set(CMAKE_ASM_FLAGS_INIT -m32)
 
-        set(CMAKE_EXE_LINKER_FLAGS_INIT "${CMAKE_EXE_LINKER_FLAGS} -m32")
-        set(CMAKE_SHARED_LINKER_FLAGS_INIT "${CMAKE_SHARED_LINKER_FLAGS} -m32")
-        set(CMAKE_MODULE_LINKER_FLAGS_INIT "${CMAKE_MODULE_LINKER_FLAGS_INIT} -m32")
-
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m32")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m32")
+        set(CMAKE_MODULE_LINKER_FLAGS_INIT -m32)
         add_compile_definitions(X32_COMPILE)
+        add_compile_options(-m32)
     endif()
 
     # Linker options
@@ -102,7 +102,6 @@ include_directories($ENV{CGC_INCLUDE_DIR})
 find_library(LIB_CGC NAMES cgc PATHS $ENV{CGC_LIB_DIR})
 find_library(LIB_POV NAMES pov PATHS $ENV{CGC_LIB_DIR})
 find_library(LIB_AES NAMES tiny-AES128-C PATHS $ENV{CGC_LIB_DIR})
-
 
 function(build path target)
     message(STATUS "Building ${target}")
@@ -254,7 +253,7 @@ function(buildSO)
         target_include_directories(${LIB_NAME} PUBLIC ${INCLUDE_DIR})
         target_link_libraries(${LIB_NAME} ${LIB_CGC})
 
-	INSTALL(TARGETS ${LIB_NAME}
+	    INSTALL(TARGETS ${LIB_NAME}
 		LIBRARY DESTINATION /usr/local/lib/cgc/polls
 	)
     endif()

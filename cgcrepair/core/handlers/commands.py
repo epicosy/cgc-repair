@@ -18,22 +18,20 @@ class CommandsHandler(CommandsInterface, Handler):
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.env = None
+        self.env = environ.copy()
         self.return_code = 0
         self.duration = 0
         self.output, self.error = None, None
 
     def set(self):
-        self.env = environ.copy()
         self.env["CGC_INCLUDE_DIR"] = self.app.config.get_config('include')
-        lib_root = self.app.config.get_config('lib')
-        self.env["CGC_LIB_DIR"] = f"{lib_root};{lib_root}/libpov;{lib_root}/aes"
-        ld_lib_path = f"{lib_root}/polls:{lib_root}:{lib_root}/aes"
+        lib_path = self.app.config.get_config('lib32' if "M32" in self.env else 'lib64')
+        self.env["CGC_LIB_DIR"] = lib_path
 
         if "LD_LIBRARY_PATH" in self.env:
-            self.env["LD_LIBRARY_PATH"] = ld_lib_path + ":" + self.env["LD_LIBRARY_PATH"]
+            self.env["LD_LIBRARY_PATH"] = lib_path + ":" + self.env["LD_LIBRARY_PATH"]
         else:
-            self.env["LD_LIBRARY_PATH"] = ld_lib_path
+            self.env["LD_LIBRARY_PATH"] = lib_path
 
     def run(self, **kwargs):
         pass

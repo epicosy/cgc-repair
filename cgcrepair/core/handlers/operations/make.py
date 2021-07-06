@@ -32,7 +32,7 @@ class MakeHandler(CommandsHandler):
             self.env["SAVETEMPS"] = "True"
 
         # setting platform architecture
-        if '64bit' in platform.architecture()[0]:
+        if '64bit' in platform.architecture()[0] and "M32" not in self.env:
             self.cmake_opts = f"{self.cmake_opts} -DCMAKE_SYSTEM_PROCESSOR=amd64"
         else:
             self.cmake_opts = f"{self.cmake_opts} -DCMAKE_SYSTEM_PROCESSOR=i686"

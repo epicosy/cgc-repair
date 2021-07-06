@@ -15,7 +15,9 @@ class Database(Controller):
             (['-I', '--instances'], {'help': 'Lists all instances in the database.', 'action': 'store_true',
                                      'required': False}),
             (['-M', '--metadata'], {'help': 'Lists metadata in the database.', 'action': 'store_true',
-                                    'required': False})
+                                    'required': False}),
+            (['-n', '--name'], {'help': 'Lists only the name of the record in the table.', 'action': 'store_true',
+                                'required': False})
         ]
     )
     def list(self):
@@ -23,14 +25,20 @@ class Database(Controller):
             instance_handler = self.app.handler.get('database', 'instance', setup=True)
             instances = instance_handler.all()
 
-            self.app.render({'header': "ID | Name | Path | Pointer", 'collection': instances}, 'list.jinja2')
+            if self.app.pargs.name:
+                self.app.render({'collection': [inst.name for inst in instances]}, 'list.jinja2')
+            else:
+                self.app.render({'header': "ID | Name | Path | Pointer", 'collection': instances}, 'list.jinja2')
 
         if self.app.pargs.metadata:
             metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
             metadata = metadata_handler.all()
 
-            self.app.render({'header': "Name | CWE | Nº POVs | LOC | Vuln LOC | Patch LOC | Vuln Files",
-                             'collection': metadata}, 'list.jinja2')
+            if self.app.pargs.name:
+                self.app.render({'collection': [met.name for met in metadata]}, 'list.jinja2')
+            else:
+                self.app.render({'header': "Name | CWE | Nº POVs | LOC | Vuln LOC | Patch LOC | Vuln Files",
+                                'collection': metadata}, 'list.jinja2')
 
     @ex(
         help='Lists outcomes for a specific instance.',

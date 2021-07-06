@@ -28,7 +28,8 @@ cgcrepair:
 
 ### Bindings
   python2: "python2"
-  lib: "/usr/local/lib/cgc"
+  lib32: "/usr/local/lib32/cgc"
+  lib64: "/usr/local/lib64/cgc"
   include: "/usr/local/include/cgc"
   corpus: "/usr/local/src/cgc"
   tools: "/usr/local/share/pyshared/cgc"

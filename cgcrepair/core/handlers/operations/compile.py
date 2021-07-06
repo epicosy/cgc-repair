@@ -101,8 +101,8 @@ class CompileHandler(MakeHandler):
         if self.fixes:
             cpp_file = self.fixes.pop(0)
 
-            if self.app.pargs.prefix:
-                cpp_file = str(self.app.pargs.prefix / Path(cpp_file))
+            # if self.app.pargs.prefix:
+            #    cpp_file = str(self.app.pargs.prefix / Path(cpp_file))
 
         if Path(cpp_file).exists():
             compile_command = self.get_compile_command(source_file, cpp_file)

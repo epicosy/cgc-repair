@@ -90,11 +90,13 @@ class GenPollsHandler(CommandsHandler):
                     if self.error:
                         if 'AssertionError' in self.error:
                             self.app.log.warning(self.error)
-                        else:
-                            raise CommandError(self.error)
+                        continue
 
                     self.app.log.info(f"Generated polls for {challenge_paths.name}.")
                     break
+
+        if self.error and 'AssertionError' not in self.error:
+            raise CommandError(self.error)
 
     def copy_polls(self, challenge_name: str):
         if self.polls:

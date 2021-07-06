@@ -1,9 +1,6 @@
-from pathlib import Path
-
 from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.exc import CommandError
 from cgcrepair.core.handlers.commands import CommandsHandler
-from cgcrepair.utils.data import ChallengePaths
 
 
 class GenPOVsHandler(CommandsHandler):
@@ -27,6 +24,8 @@ class GenPOVsHandler(CommandsHandler):
             self.app.pargs.coverage = None
             self.app.pargs.fix_files = None
 
+            if self.app.pargs.m32:
+                compile_handler.env["M32"] = "True"
             compile_handler.set()
             compile_handler.build_povs(challenge)
 
@@ -37,3 +36,6 @@ class GenPOVsHandler(CommandsHandler):
             self.error = str(ce)
         finally:
             self.unset()
+
+    def unset(self):
+        super(GenPOVsHandler, self).unset()
