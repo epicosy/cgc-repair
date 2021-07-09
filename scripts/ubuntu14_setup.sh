@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Install dependencies
+apt-get update
 apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget libbz2-dev curl lzma-dev liblzma-dev
 [[ $? -eq 1 ]] && echo "[Error] Failed to install dependencies" && exit 1 ;
 
@@ -39,7 +40,7 @@ curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 [[ $? -eq 1 ]] && echo "[Error] Failed to download pip for Python 3" && exit 1 ;
 python3 get-pip.py
 [[ $? -eq 1 ]] && echo "[Error] Failed to install pip for Python 3" && exit 1 ;
-curl https://bootstrap.pypa.io/2.7/get-pip.py -o get-pip.py
+curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
 [[ $? -eq 1 ]] && echo "[Error] Failed to download pip for Python 2" && exit 1 ;
 python get-pip.py
 [[ $? -eq 1 ]] && echo "[Error] Failed to install pip for Python 2" && exit 1 ;

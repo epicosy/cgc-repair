@@ -19,9 +19,11 @@ make_args = [
 # Exclusive arguments for test command
 argparse_handler = ArgparseArgumentHandler(add_help=False)
 tests_group = argparse_handler.add_mutually_exclusive_group(required=False)
-tests_group.add_argument('-pt', '--pos_tests', action='store_true', help='Run all positive tests against the challenge.',
+tests_group.add_argument('-pt', '--pos_tests', action='store_true',
+                         help='Run all positive tests against the challenge.',
                          required=False)
-tests_group.add_argument('-nt', '--neg_tests', action='store_true', help='Run all negative tests against the challenge.',
+tests_group.add_argument('-nt', '--neg_tests', action='store_true',
+                         help='Run all negative tests against the challenge.',
                          required=False)
 tests_group.add_argument('-tn', '--tests', type=str, nargs='+', help='Name of the test', required=False)
 
@@ -81,8 +83,9 @@ class Instance(Controller):
                       (['-cov', '--coverage'],
                        {'help': 'Cmake generates gcov files.', 'action': 'store_true', 'required': False}),
                       (
-                      ['-L', '--link'], {'help': 'Flag for only links objects into executable.', 'action': 'store_true',
-                                         'required': False}),
+                              ['-L', '--link'],
+                              {'help': 'Flag for only links objects into executable.', 'action': 'store_true',
+                               'required': False}),
                       (['-cpp', '--cpp_files'], {'help': 'Flag to indicate that instrumented files are preprocessed.',
                                                  'action': 'store_true', 'required': False}),
                       (['-ffs', '--fix_files'],
@@ -131,3 +134,19 @@ class Instance(Controller):
 
         if (test_handler.error or test_handler.failed) and self.app.pargs.exit_fail:
             exit(1)
+
+    @ex(
+        help='Applies a patch file to an instance\'s source file.',
+        arguments=[
+            (['-sf', '--source_file'], {'help': 'The relative path to the source file (e.g. src/main.c).', 'type': str,
+                                        'required': True}),
+            (['-pf', '--patch_file'], {'help': 'The absolute path to the patch file.', 'type': str, 'required': True}),
+        ]
+    )
+    def patch(self):
+        command_handler = self.app.handler.get('commands', 'commands', setup=True)
+        command_handler(cmd_str=f"patch -d {self.working.source} {self.app.pargs.source_file} -i "
+                                f"{self.app.pargs.patch_file} --verbose")
+
+        if not command_handler.error:
+            self.app.log.info(f"Patched {self.app.pargs.source_file}")
