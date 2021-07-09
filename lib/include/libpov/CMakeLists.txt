@@ -25,6 +25,7 @@ INSTALL(TARGETS pov
 )
 
 set_target_properties(pov PROPERTIES PUBLIC_HEADER "pov/cgc_ctype.h;pov/cgc_limits.h;pov/cgc_pcre.h;pov/cgc_stdlib.h;pov/cgc_string.h;pov/cgc_types.h")
-INSTALL(TARGETS pov 
+INSTALL(TARGETS pov
+        LIBRARY DESTINATION ${LIB_DESTINATION}
         PUBLIC_HEADER DESTINATION /usr/local/include/cgc/libpov/pov
 )

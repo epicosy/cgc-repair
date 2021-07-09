@@ -30,16 +30,20 @@ make install
 cp /usr/local/bin/python3.8 /usr/bin
 update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2
 [[ $? -eq 1 ]] && echo "[Error] Failed to set default version of Python 3 to 3.8.10" && exit 1 ;
+
+
+# Install pip for Python 3.8
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+[[ $? -eq 1 ]] && echo "[Error] Failed to download pip for Python 3" && exit 1 ;
+python3 get-pip.py
+[[ $? -eq 1 ]] && echo "[Error] Failed to install pip for Python 3" && exit 1 ;
+
 # Update lsb_release for pip3 install
 python38="\# \!\/usr\/bin\/python3.8 -Es"
 sed -i "1s/.*/$python38/" /usr/bin/lsb_release && ln -s /usr/share/pyshared/lsb_release.py /usr/local/lib/python3.8/site-packages/lsb_release.py
 [[ $? -eq 1 ]] && echo "[Error] Failed to update lsb_release to python3.8" && exit 1 ;
 
-# Install pip 2 and 3
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-[[ $? -eq 1 ]] && echo "[Error] Failed to download pip for Python 3" && exit 1 ;
-python3 get-pip.py
-[[ $? -eq 1 ]] && echo "[Error] Failed to install pip for Python 3" && exit 1 ;
+# Install pip for Python 2.7
 curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
 [[ $? -eq 1 ]] && echo "[Error] Failed to download pip for Python 2" && exit 1 ;
 python get-pip.py
