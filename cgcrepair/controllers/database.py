@@ -1,6 +1,8 @@
 from cement import Controller, ex
 
+from cgcrepair.core.corpus.cwe_parser import CWEParser
 from cgcrepair.core.exc import CGCRepairError
+from cgcrepair.core.tests import Tests
 
 
 class Database(Controller):
@@ -36,9 +38,29 @@ class Database(Controller):
 
             if self.app.pargs.name:
                 self.app.render({'collection': [met.name for met in metadata]}, 'list.jinja2')
+            elif self.app.pargs.cwes:
+                self.app.render({'collection': [met.name for met in metadata]}, 'list.jinja2')
             else:
                 self.app.render({'header': "Name | CWE | Nº POVs | LOC | Vuln LOC | Patch LOC | Vuln Files",
                                 'collection': metadata}, 'list.jinja2')
+
+    @ex(
+        help="List the benchmark's CWEs"
+    )
+    def cwes(self):
+        metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+        metadata = metadata_handler.all()
+
+        for m in metadata:
+            challenge = corpus_handler.get(m.name)
+            cwe_parser = CWEParser(description=challenge.info(), level=0)
+            # TODO: get the real tests
+            #tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
+            neg_tests = [f for f in challenge.paths.source.iterdir() if f.is_dir() and f.name.startswith("pov")]
+
+            for pov, cwe in zip(neg_tests, cwe_parser.cwe_ids(number=False)):
+                print(cwe, challenge.id()+'_'+pov.name[-1], challenge.name)
 
     @ex(
         help='Lists outcomes for a specific instance.',
