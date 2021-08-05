@@ -7,7 +7,7 @@ class CommandsInterface(Interface):
         interface = 'commands'
 
     @abstractmethod
-    def set(self):
+    def set(self, *args, **kwargs):
         pass
 
     @abstractmethod
@@ -15,7 +15,7 @@ class CommandsInterface(Interface):
         pass
 
     @abstractmethod
-    def unset(self):
+    def unset(self, **kwargs):
         pass
 
 
@@ -27,3 +27,7 @@ class CorpusInterface(Interface):
 class DatabaseInterface(Interface):
     class Meta:
         interface = 'database'
+
+class RunnerInterface(Interface):
+    class Meta:
+        interface = 'runner'

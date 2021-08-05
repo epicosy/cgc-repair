@@ -1,5 +1,6 @@
 from cement import Controller, ex
 
+from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.corpus.manifest import Manifest
 from cgcrepair.core.exc import CGCRepairError
 from cgcrepair.core.tests import Tests
@@ -11,20 +12,22 @@ class Corpus(Controller):
         stacked_on = 'base'
         stacked_type = 'nested'
 
-        # controller level arguments. ex: 'cgcrepair --version'
         arguments = [
-            (['-cn', '--challenge'], {'help': 'The challenge name.', 'type': str, 'required': True}),
+            (['--cid'], {'help': 'The challenge id.', 'type': str, 'required': True}),
         ]
 
-    def _post_argument_parsing(self):
-        if 'challenge' in self.app.pargs:
-            # TODO: maybe add as well the metadata
-            corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+    def get_challenge(self) -> Challenge:
+        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+        metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+        metadata = metadata_handler.get(self.app.pargs.cid)
 
-            if not corpus_handler.has(self.app.pargs.challenge):
-                raise CGCRepairError(f"No {self.app.pargs.challenge} challenge in the CGC Corpus")
+        if not metadata:
+            raise CGCRepairError(f"No challenge with id {self.app.pargs.cid} in the database")
 
-            self.challenge = corpus_handler.get(self.app.pargs.challenge)
+        if not corpus_handler.has(metadata.name):
+            raise CGCRepairError(f"No {metadata.name} challenge in the CGC Corpus")
+
+        return corpus_handler.get(metadata.name)
 
     @ex(
         help='Checks out the specified challenge to a working directory.',
@@ -40,9 +43,11 @@ class Corpus(Controller):
         ]
     )
     def checkout(self):
+        challenge = self.get_challenge()
         checkout_handler = self.app.handler.get('commands', 'checkout', setup=True)
-        checkout_handler.set()
-        checkout_handler.run(self.challenge)
+        checkout_handler.set(no_patch=self.app.pargs.no_patch, working_dir=self.app.pargs.working_dir,
+                             seed=self.app.pargs.seed, force=self.app.pargs.force)
+        checkout_handler.run(challenge)
 
         if checkout_handler.error:
             self.app.log.error(checkout_handler.error)
@@ -55,11 +60,11 @@ class Corpus(Controller):
         ]
     )
     def genpolls(self):
+        challenge = self.get_challenge()
+        assert self.app.pargs.count > 0
         genpolls_handler = self.app.handler.get('commands', 'genpolls', setup=True)
-        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
-        challenge_paths = corpus_handler.get_challenge_paths(self.app.pargs.challenge)
         genpolls_handler.set()
-        genpolls_handler.run(challenge_paths)
+        genpolls_handler.run(challenge, self.app.pargs.count)
 
         if genpolls_handler.error:
             self.app.log.error(genpolls_handler.error)
@@ -72,8 +77,8 @@ class Corpus(Controller):
     )
     def genpovs(self):
         genpovs_handler = self.app.handler.get('commands', 'genpovs', setup=True)
-        genpovs_handler.set()
-        genpovs_handler.run(self.challenge)
+        genpovs_handler.set(m32=self.app.pargs.m32)
+        genpovs_handler.run(self.get_challenge())
 
         if genpovs_handler.error:
             self.app.log.error(genpovs_handler.error)
@@ -87,7 +92,8 @@ class Corpus(Controller):
         ]
     )
     def tests(self):
-        tests = Tests(polls_path=self.challenge.paths.polls, povs_path=self.challenge.paths.povs)
+        challenge = self.get_challenge()
+        tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
 
         # TODO: use jinja templates instead of prints
         if self.app.pargs.neg:
@@ -115,7 +121,8 @@ class Corpus(Controller):
         ]
     )
     def manifest(self):
-        manifest = Manifest(source_path=self.challenge.paths.source, out_dir=self.app.pargs.path)
+        challenge = self.get_challenge()
+        manifest = Manifest(source_path=challenge.paths.source, out_dir=self.app.pargs.path)
 
         if self.app.pargs.path:
             manifest.write()
@@ -127,3 +134,11 @@ class Corpus(Controller):
                     print(file, ' '.join([f"{v} {v+ len(l)}" for v, l in vuln.items()]))
                 else:
                     print(file)
+
+    @ex(
+        help='Prints challenge\'s description',
+        arguments=[]
+    )
+    def info(self):
+        challenge = self.get_challenge()
+        print(challenge.info())

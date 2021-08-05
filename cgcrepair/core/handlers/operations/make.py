@@ -19,16 +19,21 @@ class MakeHandler(CommandsHandler):
         self.compile_commands = {}
         self.cmake_opts = ""
 
-    def set(self):
+    def set(self, replace: bool = False, save_temps: bool = False, write_build_args: str = None, tag: str = None,
+            compiler_trail_path: bool = False):
         super().set()
+        self.write_build_args = write_build_args
+        self.save_temps = save_temps
+        self.compiler_trail_path = compiler_trail_path
+        self.tag = tag
         self.cmake_opts = f"{self.env['CMAKE_OPTS']}" if 'CMAKE_OPTS' in self.env else ""
 
-        if self.app.pargs.replace:
+        if replace:
             self.cmake_opts = f"{self.cmake_opts} -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON"
 
         self.cmake_opts = f"{self.cmake_opts} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 
-        if self.app.pargs.save_temps:
+        if save_temps:
             self.env["SAVETEMPS"] = "True"
 
         # setting platform architecture
@@ -66,12 +71,9 @@ class MakeHandler(CommandsHandler):
 
     def run(self, instance: Instance, working: WorkingPaths):
         try:
-            #if instance.has_patch:
-            #    self.env["PATCH"] = "True"
-
             self._make(working.root, instance.name, working.build_root)
 
-            if self.app.pargs.write_build_args:
+            if self.write_build_args:
                 self._write_build_args(working)
 
         except CommandError as ce:
@@ -80,12 +82,12 @@ class MakeHandler(CommandsHandler):
             self.unset()
 
     def unset(self):
-        if self.app.pargs.save_temps:
+        if self.save_temps:
             del self.env["SAVETEMPS"]
 
     def _write_build_args(self, working: WorkingPaths):
         manifest = Manifest(source_path=working.source)
-        write_build_args = Path(self.app.pargs.write_build_args)
+        write_build_args = Path(self.write_build_args)
 
         if not self.compile_commands:
             self.load_commands(working)
@@ -107,7 +109,7 @@ class MakeHandler(CommandsHandler):
 
         with compile_commands_file.open(mode="r") as json_file:
             for entry in loads(json_file.read()):
-                if self.app.pargs.compiler_trail_path:
+                if self.compiler_trail_path:
                     entry['command'] = entry['command'].replace('/usr/bin/', '')
                 compile_command = CompileCommand(file=Path(entry['file']), dir=Path(entry['directory']),
                                                  command=entry['command'])
@@ -119,17 +121,19 @@ class MakeHandler(CommandsHandler):
                         short_path = compile_command.file.relative_to(working.root)
                     self.compile_commands[str(short_path)] = compile_command
 
-    def save_outcome(self):
+    def save_outcome(self, instance: Instance):
         outcome = CompileOutcome()
-        outcome.instance_id = self.app.pargs.id
+        outcome.instance_id = instance.id
         outcome.error = self.error
         outcome.exit_status = self.return_code
 
-        if self.app.pargs.tag:
-            outcome.tag = self.app.pargs.tag
+        if self.tag:
+            outcome.tag = self.tag
         else:
             outcome.tag = self.Meta.label
 
         co_id = self.app.db.add(outcome)
-        self.app.db.update(entity=Instance, entity_id=self.app.pargs.id, attr='pointer', value=co_id)
-        self.app.log.info(f"Inserted '{self.Meta.label} outcome' with id {co_id} for instance {self.app.pargs.id}.")
+        self.app.db.update(entity=Instance, entity_id=instance.id, attr='pointer', value=co_id)
+        self.app.log.debug(f"Inserted '{self.Meta.label} outcome' with id {co_id} for instance {instance.id}.")
+
+        return co_id

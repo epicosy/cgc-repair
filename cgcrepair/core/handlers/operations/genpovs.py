@@ -12,20 +12,17 @@ class GenPOVsHandler(CommandsHandler):
         self.out_dir = None
         self.polls = []
 
-    def set(self):
+    def set(self, m32: bool = False):
         super().set()
+        self.m32 = m32
 
     def run(self, challenge: Challenge):
         try:
             compile_handler = self.app.handler.get('commands', 'compile', setup=True)
 
-            self.app.pargs.replace = None
-            self.app.pargs.save_temps = None
-            self.app.pargs.coverage = None
-            self.app.pargs.fix_files = None
-
-            if self.app.pargs.m32:
+            if self.m32:
                 compile_handler.env["M32"] = "True"
+
             compile_handler.set()
             compile_handler.build_povs(challenge)
 

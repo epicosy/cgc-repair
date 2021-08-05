@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from typing import List, AnyStr
 
 from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.exc import CommandError
@@ -17,31 +18,39 @@ class CompileHandler(MakeHandler):
         super().__init__(**kwargs)
         self.fixes = []
 
-    def set(self):
-        super().set()
+    def set(self, coverage: bool = False, fix_files: List[AnyStr] = None, inst_files: List[AnyStr] = None,
+            cpp_files: bool = False, backup: str = None, link: bool = False, replace: bool = False, tag: str = None,
+            save_temps: bool = False, write_build_args: str = None, compiler_trail_path: bool = False):
+        super().set(replace=replace, tag=tag, save_temps=save_temps, write_build_args=write_build_args,
+                    compiler_trail_path=compiler_trail_path)
+        self.coverage = coverage
+        self.inst_files = inst_files
+        self.cpp_files = cpp_files
+        self.backup = backup
+        self.link = link
 
-        if self.app.pargs.coverage:
+        if coverage:
             self.env["COVERAGE"] = "True"
 
-        if self.app.pargs.fix_files:
-            if not isinstance(self.app.pargs.fix_files, list):
-                self.fixes = [self.app.pargs.fix_files]
+        if fix_files:
+            if not isinstance(fix_files, list):
+                self.fixes = [fix_files]
             else:
-                self.fixes = self.app.pargs.fix_files
+                self.fixes = fix_files
 
     def run(self, instance: Instance, working: WorkingPaths):
         try:
-            if self.fixes and self.app.pargs.inst_files and len(self.fixes) != len(self.app.pargs.inst_files):
-                error = f"The files [{self.fixes}] can not be mapped. Uneven number of files [{self.app.pargs.inst_files}]."
+            if self.fixes and self.inst_files and len(self.fixes) != len(self.inst_files):
+                error = f"The files [{self.fixes}] can not be mapped. Uneven number of files [{self.inst_files}]."
                 raise ValueError(error)
 
             # Backups manifest files
-            if self.app.pargs.backup:
+            if self.backup:
                 self._backup_manifest_files(working)
 
-            if self.app.pargs.link:
+            if self.link:
                 self.link_executable(working)
-            elif self.app.pargs.inst_files:
+            elif self.inst_files:
                 self.build_instrumented(working)
             else:
                 self.app.log.info(f"Compiling {instance.name}.")
@@ -57,11 +66,11 @@ class CompileHandler(MakeHandler):
             self.unset()
 
     def unset(self):
-        if self.app.pargs.coverage and 'COVERAGE' in self.env:
+        if self.coverage and 'COVERAGE' in self.env:
             del self.env['COVERAGE']
 
     def _backup_manifest_files(self, working: WorkingPaths):
-        backup_path = Path(self.app.pargs.backup)
+        backup_path = Path(self.backup)
         manifest_file = working.source / 'manifest'
 
         with manifest_file.open(mode="r") as mf:
@@ -83,7 +92,7 @@ class CompileHandler(MakeHandler):
         self.app.log.info(f"Compiling preprocessed file for {working.source.name}.")
         # compile the preprocessed file to object
         self.load_commands(working)
-        mapping = map_instrumented_files(self.app.pargs.inst_files, cpp_files=self.app.pargs.cpp_files,
+        mapping = map_instrumented_files(self.inst_files, cpp_files=self.cpp_files,
                                          manifest_path=working.source / 'manifest')
 
         if mapping:
@@ -93,7 +102,7 @@ class CompileHandler(MakeHandler):
 
             # links objects into executable
             self.link_executable(working)
-            self.app.log.info(f"Compiled instrumented files {self.app.pargs.inst_files}.")
+            self.app.log.info(f"Compiled instrumented files {self.inst_files}.")
         else:
             self.error = f"Could not map fix files {self.fixes} with source files."
 

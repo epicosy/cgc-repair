@@ -2,6 +2,7 @@ from cement import Controller, ex
 from cement.ext.ext_argparse import ArgparseArgumentHandler
 
 from cgcrepair.core.exc import CGCRepairError
+from cgcrepair.core.tests import Tests
 
 make_args = [
     (['-wba', '--write_build_args'], {'help': 'File to output build args.', 'type': str, 'default': None}),
@@ -68,9 +69,11 @@ class Instance(Controller):
     )
     def make(self):
         make_handler = self.app.handler.get('commands', 'make', setup=True)
-        make_handler.set()
+        make_handler.set(replace=self.app.pargs.replace, save_temps=self.app.pargs.save_temps, tag=self.app.pargs.tag,
+                         write_build_args=self.app.pargs.write_build_args,
+                         compiler_trail_path=self.app.pargs.compiler_trail_path)
         make_handler.run(self.instance, self.working)
-        make_handler.save_outcome()
+        make_handler.save_outcome(self.instance)
 
         if make_handler.error:
             self.app.log.error(make_handler.error)
@@ -97,9 +100,13 @@ class Instance(Controller):
     )
     def compile(self):
         compile_handler = self.app.handler.get('commands', 'compile', setup=True)
-        compile_handler.set()
+        compile_handler.set(coverage=self.app.pargs.coverage, fix_files=self.app.pargs.fix_files, tag=self.app.pargs.tag,
+                            inst_files=self.app.pargs.inst_files, backup=self.app.pargs.backup, link=self.app.pargs.link,
+                            replace=self.app.pargs.replace, save_temps=self.app.pargs.save_temps,
+                            write_build_args=self.app.pargs.write_build_args,
+                            compiler_trail_path=self.app.pargs.compiler_trail_path)
         compile_handler.run(self.instance, self.working)
-        compile_handler.save_outcome()
+        compile_handler.save_outcome(self.instance)
 
         if compile_handler.error:
             self.app.log.error(compile_handler.error)
@@ -126,8 +133,14 @@ class Instance(Controller):
         corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
         challenge_paths = corpus_handler.get_challenge_paths(self.instance.name)
 
-        test_handler.set()
-        test_handler.run(self.instance, self.working, challenge_paths)
+        test_handler.set(timeout=self.app.pargs.timeout, neg_pov=self.app.pargs.neg_pov, prefix=self.app.pargs.prefix,
+                         print_ids=self.app.pargs.print_ids, only_numbers=self.app.pargs.only_numbers,
+                         print_class=self.app.pargs.print_class, out_file=self.app.pargs.out_file,
+                         write_fail=self.app.pargs.write_fail)
+        tests = Tests(polls_path=challenge_paths.polls, povs_path=challenge_paths.povs, tests=self.app.pargs.tests,
+                      pos_tests=self.app.pargs.pos_tests, neg_tests=self.app.pargs.neg_tests,
+                      only_numbers=self.app.pargs.only_numbers)
+        test_handler.run(self.instance, self.working, challenge_paths, tests)
 
         if test_handler.error:
             self.app.log.error(test_handler.error)

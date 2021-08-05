@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from cgcrepair.core.handlers.database import Metadata, Database
@@ -31,6 +32,12 @@ def init_metadata(app):
             app.log.info(f"Processing {challenge_name} for metadata. {i}/{challenges_count}")
             challenge = corpus_handler.get(challenge_name)
             metadata = metadata_handler(challenge)
+
+            if metadata.vuln_files > 1:
+                app.log.info(f"Removing multi-file challenge: {challenge_name}.")
+                os.system(f"rm -rf {challenge.paths.source}")
+                continue
+
             database.add(metadata)
 
     app.extend('db', database)

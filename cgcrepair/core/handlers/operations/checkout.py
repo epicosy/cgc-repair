@@ -1,4 +1,5 @@
 import shutil
+import traceback
 from binascii import b2a_hex
 from os import urandom
 from pathlib import Path
@@ -7,7 +8,7 @@ from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.exc import NotEmptyDirectory
 from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.corpus.manifest import Manifest
-from distutils.dir_util import copy_tree
+from shutil import copytree
 from cgcrepair.core.handlers.database import Instance
 
 
@@ -17,26 +18,28 @@ class CheckoutHandler(CommandsHandler):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.instance = Instance()
 
-    def set(self):
+    def set(self, no_patch: bool = False, working_dir: str = None, seed: int = None, force: bool = False):
         super().set()
-        if not self.app.pargs.no_patch:
+        self.no_patch = no_patch
+        self.working_dir = working_dir
+        self.seed = seed
+        self.force = force
+
+        if not no_patch:
             self.env["PATCH"] = "True"
 
     def run(self, challenge: Challenge):
         try:
-            working_dir = self._mkdir()
+            working_dir = self._mkdir(challenge)
             working_dir_source = working_dir / challenge.name
 
-            self._checkout_files(working_dir, working_dir_source)
+            self._checkout_files(challenge.name, working_dir, working_dir_source)
             self._write_manifest(working_dir_source)
 
             # Inserting instance into database
-            self.instance.name = challenge.name
-            self.instance.path = str(working_dir)
-            #self.instance.has_patch = False if self.app.pargs.no_patch else True
-            _id = self.app.db.add(self.instance)
+            instance = Instance(m_id=challenge.id(), name=challenge.name, path=str(working_dir))
+            _id = self.app.db.add(instance)
 
             # write the instance id to a file inside the working directory
             # useful to use in external scripts and to keep track locally of instances
@@ -45,27 +48,28 @@ class CheckoutHandler(CommandsHandler):
 
             print(f"Checked out {challenge.name} with id {_id}")
 
+            return _id
+
         except Exception as e:
             self.error = str(e)
+            self.app.log.warning(traceback.format_exc())
         finally:
             self.unset()
 
-    def _mkdir(self):
+    def _mkdir(self, challenge: Challenge):
         # Make working directory
-        if self.app.pargs.working_dir:
-            working_dir = Path(self.app.pargs.working_dir)
+        if self.working_dir:
+            working_dir = Path(self.working_dir)
         else:
-            if self.app.pargs.seed:
-                seed = self.app.pargs.seed
-            else:
+            if not self.seed:
                 seed = b2a_hex(urandom(2)).decode()
 
-            working_dir = Path(self.app.config.get_config('working_dir'), f"{self.app.pargs.challenge}_{seed}")
+            working_dir = Path(self.app.config.get_config('working_dir'), f"{challenge.name}_{self.seed}")
 
-        self.app.log.info(f"Checking out {self.app.pargs.challenge} to {working_dir}.")
+        self.app.log.info(f"Checking out {challenge.name} to {working_dir}.")
 
         if working_dir.exists():
-            if any(working_dir.iterdir()) and not self.app.pargs.force:
+            if any(working_dir.iterdir()) and not self.force:
                 raise NotEmptyDirectory(f"Working directory {working_dir} exists and is not empty.")
         else:
             self.app.log.info("Creating working directory.")
@@ -73,13 +77,14 @@ class CheckoutHandler(CommandsHandler):
 
         return working_dir
 
-    def _checkout_files(self, working_dir: Path, working_dir_source: Path):
+    def _checkout_files(self, challenge_name: str, working_dir: Path, working_dir_source: Path):
         self.app.log.info(f"Copying files to {working_dir}.")
         # Copy challenge source files
         working_dir_source.mkdir()
         corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
-        paths = corpus_handler.get_challenge_paths(challenge_name=self.app.pargs.challenge)
-        copy_tree(src=str(paths.source), dst=str(working_dir_source))
+        paths = corpus_handler.get_challenge_paths(challenge_name=challenge_name)
+        self.app.log.warning(f"src {paths.source} dst {working_dir_source}")
+        copytree(src=str(paths.source), dst=str(working_dir_source), dirs_exist_ok=True)
 
         # Copy CMakeLists.txt
         shutil.copy2(src=self.app.tools.cmake_file, dst=working_dir)
@@ -91,6 +96,7 @@ class CheckoutHandler(CommandsHandler):
         manifest = Manifest(source_path=working_dir_source)
         manifest.write()
 
-        if self.app.pargs.no_patch:
-            self.app.log.info(f"Removing patches definitions from vulnerable files {manifest.vuln_files.keys()}.")
+        if self.no_patch:
+            vuln_files = ', '.join(manifest.vuln_files.keys())
+            self.app.log.info(f"Removing patches definitions from vulnerable files {vuln_files}.")
             manifest.remove_patches(working_dir_source)

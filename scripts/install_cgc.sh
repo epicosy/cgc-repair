@@ -11,12 +11,25 @@ apt-get install -y libc6-dev gcc-multilib g++-multilib gdb python2.7-dev softwar
 pip install cppy==1.1.0 numpy==1.16.6 && pip install pycrypto==2.6.1 pyaml==20.4.0 matplotlib==2.1
 [[ $? -eq 1 ]] && echo "[Error] Failed to install cgc-repair Python 2 dependencies." && exit 1 ;
 
-echo "cgc-repair repair dependencies installed"
+#echo "cgc-repair repair dependencies installed"
 # Installs corpus, tools, configs and paths
 
-corpus_path="/usr/local/src/cgc"
+corpus_path="/tmp/cgc"
 mkdir -p $corpus_path
-# TODO: copy corpus to to corpus path
+
+if [ ! "$(ls -A $corpus_path)" ]; then
+  tmp_dir="/tmp/cb-multios"
+  mkdir -p $tmp_dir
+  echo "Cloning CGC-Corpus"
+  git clone https://github.com/trailofbits/cb-multios $tmp_dir
+  echo "Installing CGC-Corpus"
+  while IFS= read -r line
+  do
+    echo "Copying $line files"
+    cp -r "$tmp_dir/challenges/$line" $corpus_path
+  done < "$tmp_dir/linux-working.txt"
+  rm -r $tmp_dir
+fi
 
 #Tools
 tools_path="/usr/local/share/pyshared/cgc"

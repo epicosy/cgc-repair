@@ -7,6 +7,7 @@ from .controllers.base import Base
 from cgcrepair.controllers.corpus import Corpus
 from cgcrepair.controllers.instance import Instance
 from cgcrepair.controllers.database import Database
+from cgcrepair.controllers.task import Task
 
 # Handlers
 from cgcrepair.core.handlers.configurations import YamlConfigurations
@@ -16,12 +17,14 @@ from cgcrepair.core.handlers.database import MetadataHandler
 from cgcrepair.core.handlers.operations.checkout import CheckoutHandler
 from cgcrepair.core.handlers.operations.genpolls import GenPollsHandler
 from cgcrepair.core.handlers.operations.genpovs import GenPOVsHandler
+from cgcrepair.core.handlers.tasks.sanity import SanityHandler
 from cgcrepair.core.handlers.database import InstanceHandler
 from cgcrepair.core.handlers.operations.make import MakeHandler
 from cgcrepair.core.handlers.operations.compile import CompileHandler
 from cgcrepair.core.handlers.operations.test import TestHandler
+from cgcrepair.core.handlers.runner import RunnerHandler
 
-from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface, CorpusInterface
+from cgcrepair.core.interfaces import CommandsInterface, DatabaseInterface, CorpusInterface, RunnerInterface
 
 
 class CGCRepair(App):
@@ -34,7 +37,7 @@ class CGCRepair(App):
         exit_on_close = True
 
         interfaces = [
-            CommandsInterface, DatabaseInterface, CorpusInterface
+            CommandsInterface, DatabaseInterface, CorpusInterface, RunnerInterface
         ]
 
         # load additional framework extensions
@@ -61,7 +64,7 @@ class CGCRepair(App):
             Base, YamlConfigurations, CommandsHandler, CorpusHandler,
             Corpus, CheckoutHandler, GenPollsHandler, GenPOVsHandler,
             Instance, MakeHandler, CompileHandler, TestHandler,
-            InstanceHandler, Database, MetadataHandler
+            InstanceHandler, Database, MetadataHandler, Task, SanityHandler, RunnerHandler
         ]
 
 

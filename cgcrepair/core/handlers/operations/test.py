@@ -21,15 +21,20 @@ class TestHandler(CommandsHandler):
         super().__init__(**kwargs)
         self.failed = False
 
-    def set(self):
+    def set(self, timeout: int = None, neg_pov: bool = False, print_ids: bool = False, only_numbers: bool = False,
+            print_class: bool = False, out_file: str = None, write_fail: bool = True, prefix: str = None):
         super().set()
+        self.timeout = timeout
+        self.neg_pov = neg_pov
+        self.print_ids = print_ids
+        self.only_numbers = only_numbers
+        self.print_class = print_class
+        self.out_file = out_file
+        self.write_fail = write_fail
+        self.prefix = prefix
 
-    def run(self, instance: Instance, working: WorkingPaths, challenge_paths: ChallengePaths):
+    def run(self, instance: Instance, working: WorkingPaths, challenge_paths: ChallengePaths, tests: Tests):
         try:
-            tests = Tests(polls_path=challenge_paths.polls, povs_path=challenge_paths.povs, tests=self.app.pargs.tests,
-                          pos_tests=self.app.pargs.pos_tests, neg_tests=self.app.pargs.neg_tests,
-                          only_numbers=self.app.pargs.only_numbers)
-
             self.app.log.info(f"Running {len(tests)} tests.")
             timeout = self.get_timeout()
 
@@ -45,7 +50,7 @@ class TestHandler(CommandsHandler):
                 test_outcome.duration = round(self.duration, 3)
                 test_outcome.exit_status = self.return_code
                 t_id = self.app.db.add(test_outcome)
-                self.app.log.info(f"Inserted 'test outcome' with id {t_id} for instance {self.app.pargs.id}.")
+                self.app.log.debug(f"Inserted 'test outcome' with id {t_id} for instance {instance.id}.")
                 self._process_flags(test_outcome)
 
         except (ValueError, CommandError) as e:
@@ -80,8 +85,8 @@ class TestHandler(CommandsHandler):
         # duration = sanity_handler.get(challenge, test)
         # if duration:
         #     return duration + margin
-        if self.app.pargs.timeout:
-            return self.app.pargs.timeout + margin
+        if self.timeout:
+            return self.timeout + margin
 
         return self.app.config.get_config('tests_timeout') + margin
 
@@ -99,28 +104,28 @@ class TestHandler(CommandsHandler):
         return test_outcome
 
     def _process_flags(self, test_outcome: TestOutcome):
-        if test_outcome.is_pov and self.app.pargs.neg_pov:
+        if test_outcome.is_pov and self.neg_pov:
             # Invert negative test's result
             test_outcome.passed = not test_outcome.passed
 
             if test_outcome.passed:
                 self.failed = True
 
-        if self.app.pargs.print_ids and test_outcome.passed:
-            if self.app.pargs.only_numbers:
+        if self.print_ids and test_outcome.passed:
+            if self.only_numbers:
                 print(test_outcome.name[1:])
             else:
                 print(test_outcome.name)
-        if self.app.pargs.print_class:
+        if self.print_class:
             print("PASS" if test_outcome.passed else 'FAIL')
 
-        if self.app.pargs.out_file is not None:
+        if self.out_file is not None:
             self.write_result(test_outcome)
 
         if not test_outcome.passed or test_outcome.error:
             if not test_outcome.is_pov:
                 self.failed = True
-            elif not self.app.pargs.neg_pov:
+            elif not self.neg_pov:
                 self.failed = True
 
     def _cmd_str(self, test: Test, working: WorkingPaths):
@@ -141,12 +146,12 @@ class TestHandler(CommandsHandler):
         return cb_cmd
 
     def write_result(self, test_outcome: TestOutcome):
-        if self.app.pargs.prefix:
-            out_file = Path(self.app.pargs.prefix, self.app.pargs.out_file)
+        if self.prefix:
+            out_file = Path(self.prefix, self.out_file)
         else:
-            out_file = Path(self.app.pargs.out_file)
+            out_file = Path(self.out_file)
 
-        if not self.app.pargs.write_fail and not test_outcome.passed:
+        if not self.write_fail and not test_outcome.passed:
             return
         with out_file.open(mode="a") as of:
             of.write(f"{test_outcome.name} {test_outcome.passed}\n")

@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List, AnyStr
 
 from cement import Handler
 from cgcrepair.core.interfaces import CorpusInterface
@@ -13,11 +14,14 @@ class CorpusHandler(CorpusInterface, Handler):
     def has(self, challenge_name: str):
         return challenge_name in self.get_challenges()
 
-    def get(self, challenge_name: str):
+    def get(self, challenge_name: str) -> Challenge:
         paths = self.get_challenge_paths(challenge_name)
         return Challenge(paths=paths)
 
-    def get_challenges(self):
+    def all(self) -> List[Challenge]:
+        return [self.get(challenge) for challenge in sorted(self.get_challenges())]
+
+    def get_challenges(self) -> List[AnyStr]:
         corpus_path = Path(self.app.config.get_config('corpus'))
         return [challenge.name for challenge in corpus_path.iterdir() if challenge.is_dir()]
 

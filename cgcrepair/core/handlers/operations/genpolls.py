@@ -18,48 +18,40 @@ class GenPollsHandler(CommandsHandler):
 
     def set(self):
         super().set()
-        assert self.app.pargs.count > 0
 
     def install_shared_objects(self, challenge_paths: ChallengePaths):
         challenge = Challenge(challenge_paths)
         compile_handler = self.app.handler.get('commands', 'compile', setup=True)
-
-        # TODO: clean this junk
-        self.app.pargs.replace = None
-        self.app.pargs.save_temps = None
-        self.app.pargs.coverage = None
-        self.app.pargs.fix_files = None
-
         compile_handler.set()
         compile_handler.install_shared_objects(challenge)
 
         if compile_handler.error:
             raise CommandError(compile_handler.error)
 
-    def run(self, challenge_paths: ChallengePaths):
+    def run(self, challenge: Challenge, count: int):
         try:
-            self.install_shared_objects(challenge_paths)
+            self.install_shared_objects(challenge.paths)
 
-            if challenge_paths.polls.exists():
-                self.app.log.warning(f"Deleting existing polls for {self.app.pargs.challenge}.")
-                shutil.rmtree(str(challenge_paths.polls))
+            if challenge.paths.polls.exists():
+                self.app.log.warning(f"Deleting existing polls for {challenge.cid}.")
+                shutil.rmtree(str(challenge.paths.polls))
 
-            self.app.log.info(f"Creating directories for {self.app.pargs.challenge} polls.")
-            challenge_paths.polls.mkdir(parents=True)
-            self.state_machine(challenge_paths)
+            self.app.log.info(f"Creating directories for {challenge.cid} polls.")
+            challenge.paths.polls.mkdir(parents=True)
+            self.state_machine(challenge.paths, count)
 
             if self.out_dir:
-                if not self.out_dir.exists() or len(list(self.out_dir.iterdir())) < self.app.pargs.count:
-                    self.copy_polls(challenge_paths.name)
+                if not self.out_dir.exists() or len(list(self.out_dir.iterdir())) < count:
+                    self.copy_polls(challenge.name, count)
             else:
-                raise CommandError(f"No poller directories for {challenge_paths.name}")
+                raise CommandError(f"No poller directories for {challenge.name}")
 
         except CommandError as ce:
             self.error = str(ce)
         finally:
             self.unset()
 
-    def state_machine(self, challenge_paths: ChallengePaths):
+    def state_machine(self, challenge_paths: ChallengePaths, count: int):
         # looks for the state machine scripts used for generating polls and runs it
         # otherwise sets the directory with the greatest number of polls
         pollers = list(challenge_paths.poller.iterdir())
@@ -82,7 +74,7 @@ class GenPollsHandler(CommandsHandler):
                 if state_machine_script.exists() and state_graph.exists():
                     self.out_dir.mkdir(parents=True, exist_ok=True)
                     python2 = self.app.config.get_config('python2')
-                    cmd_str = f"{python2} -B {self.app.tools.genpolls} --count {self.app.pargs.count} " \
+                    cmd_str = f"{python2} -B {self.app.tools.genpolls} --count {count} " \
                               f"--store_seed --depth 1048575 {state_machine_script} {state_graph} {self.out_dir}"
 
                     super().__call__(cmd_str=cmd_str, msg=f"Generating polls for {challenge_paths.name}.\n",
@@ -90,7 +82,9 @@ class GenPollsHandler(CommandsHandler):
                     if self.error:
                         if 'AssertionError' in self.error:
                             self.app.log.warning(self.error)
-                        continue
+                            self.error = None
+                        else:
+                            continue
 
                     self.app.log.info(f"Generated polls for {challenge_paths.name}.")
                     break
@@ -98,18 +92,18 @@ class GenPollsHandler(CommandsHandler):
         if self.error and 'AssertionError' not in self.error:
             raise CommandError(self.error)
 
-    def copy_polls(self, challenge_name: str):
+    def copy_polls(self, challenge_name: str, count: int):
         if self.polls:
             self.app.log.warning(f"No scripts for generating polls for {challenge_name}.")
             self.app.log.info(f"Coping pre-generated polls for {challenge_name}.\n")
             self.out_dir.mkdir(parents=True, exist_ok=True)
 
-            if len(self.polls) < self.app.pargs.count:
-                warning = f"Number of polls available {len(self.polls)} less than the number specified {self.app.pargs.count}"
+            if len(self.polls) < count:
+                warning = f"Number of polls available {len(self.polls)} less than the number specified {count}"
                 self.app.log.warning(warning)
 
             self.polls.sort()
-            polls = self.polls[:self.app.pargs.count] if len(self.polls) > self.app.pargs.count else self.polls
+            polls = self.polls[:count] if len(self.polls) > count else self.polls
 
             for poll in polls:
                 shutil.copy(str(poll), self.out_dir)

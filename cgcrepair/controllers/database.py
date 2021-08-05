@@ -1,7 +1,9 @@
+import operator
 from cement import Controller, ex
 
 from cgcrepair.core.corpus.cwe_parser import CWEParser
 from cgcrepair.core.exc import CGCRepairError
+from cgcrepair.core.handlers.database import Sanity
 from cgcrepair.core.tests import Tests
 
 
@@ -12,6 +14,20 @@ class Database(Controller):
         stacked_type = 'nested'
 
     @ex(
+        help='Removes a specified instance.',
+        arguments=[
+            (['--iid'], {'help': 'The id of the instance (challenge checked out).', 'type': int, 'required': True}),
+            (['-d', '--destroy'], {'help': 'Deletes the files of instance.', 'action': 'store_true', 'required': False})
+        ]
+    )
+    def remove(self):
+        instance_handler = self.app.handler.get('database', 'instance', setup=True)
+        res = instance_handler.delete(self.app.pargs.iid, self.app.pargs.destroy)
+
+        if res > 0:
+            self.app.log.info(f"Deleted instance {self.app.pargs.iid}")
+
+    @ex(
         help='Lists specified table in the database.',
         arguments=[
             (['-I', '--instances'], {'help': 'Lists all instances in the database.', 'action': 'store_true',
@@ -19,7 +35,9 @@ class Database(Controller):
             (['-M', '--metadata'], {'help': 'Lists metadata in the database.', 'action': 'store_true',
                                     'required': False}),
             (['-n', '--name'], {'help': 'Lists only the name of the record in the table.', 'action': 'store_true',
-                                'required': False})
+                                'required': False}),
+            (['-S', '--sanity'], {'help': 'Lists all sanity records in the database.', 'action': 'store_true',
+                                  'required': False})
         ]
     )
     def list(self):
@@ -30,7 +48,7 @@ class Database(Controller):
             if self.app.pargs.name:
                 self.app.render({'collection': [inst.name for inst in instances]}, 'list.jinja2')
             else:
-                self.app.render({'header': "ID | Name | Path | Pointer", 'collection': instances}, 'list.jinja2')
+                self.app.render({'header': "ID | MId | Name | Path | Pointer", 'collection': instances}, 'list.jinja2')
 
         if self.app.pargs.metadata:
             metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
@@ -38,11 +56,22 @@ class Database(Controller):
 
             if self.app.pargs.name:
                 self.app.render({'collection': [met.name for met in metadata]}, 'list.jinja2')
-            elif self.app.pargs.cwes:
-                self.app.render({'collection': [met.name for met in metadata]}, 'list.jinja2')
             else:
-                self.app.render({'header': "Name | CWE | Nº POVs | LOC | Vuln LOC | Patch LOC | Vuln Files",
-                                'collection': metadata}, 'list.jinja2')
+                self.app.render({'header': "Id | Name | CWE | Nº POVs | LOC | Vuln LOC | Patch LOC | Vuln Files",
+                                 'collection': metadata}, 'list.jinja2')
+
+        if self.app.pargs.sanity:
+            instance_handler = self.app.handler.get('database', 'instance', setup=True)
+            header = ['Id | Challenge | Challenge Id | Instance id | Status | Tests Outcomes']
+            rows = []
+
+            for sanity_check in self.app.db.query(Sanity):
+                instance = instance_handler.get(sanity_check.iid)
+                outcomes = instance_handler.get_test_outcome(sanity_check.iid)
+                str_outcomes = ';'.join([f"{o.name} {o.passed}" for o in outcomes])
+                rows.append([sanity_check.id, instance.name, sanity_check.cid, sanity_check.status, str_outcomes])
+
+            self.app.render({'header': header, 'collection': rows}, 'sanity.jinja2')
 
     @ex(
         help="List the benchmark's CWEs"
@@ -56,11 +85,11 @@ class Database(Controller):
             challenge = corpus_handler.get(m.name)
             cwe_parser = CWEParser(description=challenge.info(), level=0)
             # TODO: get the real tests
-            #tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
+            # tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
             neg_tests = [f for f in challenge.paths.source.iterdir() if f.is_dir() and f.name.startswith("pov")]
 
             for pov, cwe in zip(neg_tests, cwe_parser.cwe_ids(number=False)):
-                print(cwe, challenge.id()+'_'+pov.name[-1], challenge.name)
+                print(cwe, challenge.id(), challenge.name, challenge.id() + '_' + pov.name[-1])
 
     @ex(
         help='Lists outcomes for a specific instance.',

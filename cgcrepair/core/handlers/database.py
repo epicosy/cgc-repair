@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Union
 
 from cement import Handler
 from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
@@ -55,10 +56,21 @@ class CompileOutcome(Base):
         return f"{self.id} | {clean_error} | {self.tag} | {self.exit_status}"
 
 
+class Sanity(Base):
+    __tablename__ = "sanity"
+
+    id = Column('id', Integer, primary_key=True)
+    cid = Column('cid', String, ForeignKey('metadata.id'), nullable=False)
+    iid = Column('iid', Integer, ForeignKey('instance.id'), nullable=False)
+    instance = relationship("Instance", back_populates="sanity")
+    status = Column('status', String, nullable=False)
+
+
 class Metadata(Base):
     __tablename__ = "metadata"
 
-    name = Column('name', String, primary_key=True)
+    id = Column('id', String, primary_key=True)
+    name = Column('name', String, nullable=False)
     excluded = Column('excluded', Boolean)
     total_lines = Column('total_lines', Integer)
     vuln_lines = Column('vuln_lines', Integer)
@@ -68,7 +80,7 @@ class Metadata(Base):
     povs = Column('povs', Integer)
 
     def __str__(self):
-        return f"{self.name} | {self.main_cwe} | {self.povs} | {self.total_lines} | {self.vuln_lines} | " \
+        return f"{self.id} | {self.name} | {self.main_cwe} | {self.povs} | {self.total_lines} | {self.vuln_lines} | " \
                f"{self.patch_lines} | {self.vuln_files}"
 
 
@@ -76,12 +88,13 @@ class Instance(Base):
     __tablename__ = "instance"
 
     id = Column('id', Integer, primary_key=True)
+    m_id = Column('m_id', String)
     name = Column('name', String)
     path = Column('path', String)
     pointer = Column('pointer', Integer, nullable=True)
-    #has_patch = Column('has_patch', Boolean, nullable=False)
     test_outcome = relationship("TestOutcome", back_populates="instance")
     compile_outcome = relationship("CompileOutcome", back_populates="instance")
+    sanity = relationship("Sanity", back_populates="instance")
 
     def working(self):
         working_dir = Path(self.path)
@@ -93,12 +106,22 @@ class Instance(Base):
                             binary=build_root / self.name / self.name)
 
     def __str__(self):
-        return f"{self.id} | {self.name} | {self.path} | {self.pointer}"
+        return f"{self.id} | {self.m_id} | {self.name} | {self.path} | {self.pointer}"
 
 
 class InstanceHandler(DatabaseInterface, Handler):
     class Meta:
         label = 'instance'
+
+    def delete(self, instance_id: int, destroy: bool = False):
+        if destroy:
+            instance: Instance = self.get(instance_id)
+            instance_path = Path(instance.path)
+
+            if instance_path.exists() and instance_path.is_dir():
+                instance_path.rmdir()
+
+        return self.app.db.delete(Instance, instance_id)
 
     def get(self, instance_id: int):
         return self.app.db.query(Instance, instance_id)
@@ -123,6 +146,7 @@ class MetadataHandler(DatabaseInterface, Handler):
 
         metadata = Metadata()
         metadata.name = challenge.name
+        metadata.id = challenge.id()
         metadata.excluded = False
         metadata.total_lines = manifest.total_lines
         metadata.vuln_lines = manifest.vuln_lines
@@ -134,6 +158,9 @@ class MetadataHandler(DatabaseInterface, Handler):
 
         return metadata
 
+    def get(self, cid: str):
+        return self.app.db.query(Metadata, cid)
+
     def all(self):
         return self.app.db.query(Metadata)
 
@@ -143,6 +170,12 @@ class Database:
                  debug: bool = False):
         self.engine = create_engine(f"{dialect}://{username}:{password}@{host}:{port}/{database}", echo=debug)
         Base.metadata.create_all(bind=self.engine)
+
+    def refresh(self, entity: Base):
+        with Session(self.engine) as session, session.begin():
+            session.refresh(entity)
+
+        return entity
 
     def add(self, entity: Base):
         with Session(self.engine) as session, session.begin():
@@ -154,11 +187,15 @@ class Database:
             if hasattr(entity, 'id'):
                 return entity.id
 
+    def delete(self, entity: Base, entity_id: Union[int, str]):
+        with Session(self.engine) as session, session.begin():
+            return session.query(entity).filter(entity.id == entity_id).delete(synchronize_session='evaluate')
+
     def has_table(self, name: str):
         inspector = inspect(self.engine)
         return inspector.reflect_table(name, None)
 
-    def query(self, entity: Base, entity_id: int = None):
+    def query(self, entity: Base, entity_id: Union[int, str] = None):
         with Session(self.engine) as session, session.begin():
             if entity_id and hasattr(entity, 'id'):
                 results = session.query(entity).filter(entity.id == entity_id).first()
