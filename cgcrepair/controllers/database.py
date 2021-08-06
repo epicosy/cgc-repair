@@ -1,4 +1,4 @@
-import operator
+from tabulate import tabulate
 from cement import Controller, ex
 
 from cgcrepair.core.corpus.cwe_parser import CWEParser
@@ -62,16 +62,16 @@ class Database(Controller):
 
         if self.app.pargs.sanity:
             instance_handler = self.app.handler.get('database', 'instance', setup=True)
-            header = ['Id | Challenge | Challenge Id | Instance id | Status | Tests Outcomes']
-            rows = []
+            table = []
 
             for sanity_check in self.app.db.query(Sanity):
                 instance = instance_handler.get(sanity_check.iid)
                 outcomes = instance_handler.get_test_outcome(sanity_check.iid)
-                str_outcomes = ';'.join([f"{o.name} {o.passed}" for o in outcomes])
-                rows.append([sanity_check.id, instance.name, sanity_check.cid, sanity_check.status, str_outcomes])
+                str_outcomes = '; '.join([f"{o.name}: {str(o.passed)[0]}|{o.exit_status}|{o.sig}" for o in outcomes])
+                table.append([sanity_check.id, instance.name, sanity_check.cid, instance.id, sanity_check.status, str_outcomes])
 
-            self.app.render({'header': header, 'collection': rows}, 'sanity.jinja2')
+            print(tabulate(table, headers=['Id', 'Challenge', 'Challenge Id', 'Instance Id', 'Status', 'Tests Outcomes (name: passed|exit status|signal)']))
+            # self.app.render({'header': header, 'collection': rows}, 'sanity.jinja2')
 
     @ex(
         help="List the benchmark's CWEs"
