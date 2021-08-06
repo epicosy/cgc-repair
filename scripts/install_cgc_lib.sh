@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Installs shared libraries
 # shellcheck disable=SC2153
 cmake_opts="$CMAKE_OPTS -DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=ON"

@@ -62,7 +62,7 @@ class CheckoutHandler(CommandsHandler):
             working_dir = Path(self.working_dir)
         else:
             if not self.seed:
-                seed = b2a_hex(urandom(2)).decode()
+                self.seed = b2a_hex(urandom(2)).decode()
 
             working_dir = Path(self.app.config.get_config('working_dir'), f"{challenge.name}_{self.seed}")
 
@@ -83,7 +83,6 @@ class CheckoutHandler(CommandsHandler):
         working_dir_source.mkdir()
         corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
         paths = corpus_handler.get_challenge_paths(challenge_name=challenge_name)
-        self.app.log.warning(f"src {paths.source} dst {working_dir_source}")
         copytree(src=str(paths.source), dst=str(working_dir_source), dirs_exist_ok=True)
 
         # Copy CMakeLists.txt

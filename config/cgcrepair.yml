@@ -35,7 +35,7 @@ cgcrepair:
   tools: "/usr/local/share/pyshared/cgc"
   polls: "/usr/local/share/polls"
   povs: "/usr/local/share/povs"
-  gcov: "gcov-8"
+  gcov: "gcov"
 
 ### Output
   plots: './plots'

@@ -133,7 +133,7 @@ class Instance(Controller):
         corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
         challenge_paths = corpus_handler.get_challenge_paths(self.instance.name)
 
-        test_handler.set(timeout=self.app.pargs.timeout, neg_pov=self.app.pargs.neg_pov, prefix=self.app.pargs.prefix,
+        test_handler.set(timeout=self.app.pargs.timeout, neg_pov=self.app.pargs.neg_pov,
                          print_ids=self.app.pargs.print_ids, only_numbers=self.app.pargs.only_numbers,
                          print_class=self.app.pargs.print_class, out_file=self.app.pargs.out_file,
                          write_fail=self.app.pargs.write_fail)
