@@ -27,8 +27,7 @@ RUN python2 -m pip install cppy==1.1.0 numpy==1.16.6 && \
 ##### Install CGC-Corpus #######
 ################################
 RUN mkdir -p $TMP_DIR && mkdir -p $CORPUS_PATH && git clone https://github.com/trailofbits/cb-multios $TMP_DIR
-RUN while read -r line; do echo "Copying $line files"; cp -r "$TMP_DIR/challenges/$line" $CORPUS_PATH; done < "$TMP_DIR/linux-working.txt" && \
-    cp "./cmake/CMakeLists.txt" $CORPUS_PATH
+RUN while read -r line; do echo "Copying $line files"; cp -r "$TMP_DIR/challenges/$line" $CORPUS_PATH; done < "$TMP_DIR/linux-working.txt"
 RUN rm -r $TMP_DIR
 
 WORKDIR /cgc-repair
@@ -39,7 +38,8 @@ COPY . /cgc-repair
 ################################
 RUN mkdir -p $TOOLS_PATH && cp -r tools/* $TOOLS_PATH && cp "tools/cwe_dict.csv" "/usr/local/share" && \
     mkdir -p $CONFIG_PATH && cp "config/cgcrepair.yml" $CONFIG_PATH &&  mkdir -p "/cores" && \
-    mkdir -p "/usr/local/share/polls" && mkdir -p "/usr/local/lib/cgc/polls" && mkdir -p "/usr/local/share/povs"
+    mkdir -p "/usr/local/share/polls" && mkdir -p "/usr/local/lib/cgc/polls" && mkdir -p "/usr/local/share/povs" && \
+    cp "./cmake/CMakeLists.txt" $CORPUS_PATH
 
 RUN ./scripts/install_cgc_lib.sh
 
