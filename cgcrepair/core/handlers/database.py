@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict, Any, Callable, List
 
 from cement import Handler
 from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
@@ -212,6 +212,16 @@ class Database:
                 attr_result = getattr(results, attr)
                 session.expunge_all()
                 return attr_result
+
+    def filter(self, entity: Base, filters: Dict[Any, Callable]):
+        with Session(self.engine) as session, session.begin():
+            query = session.query(entity)
+
+            for attr, exp in filters.items():
+                query = query.filter(exp(attr))
+
+            session.expunge_all()
+            return query
 
     def count(self, entity: Base):
         with Session(self.engine) as session, session.begin():
