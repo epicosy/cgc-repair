@@ -1,3 +1,4 @@
+import platform
 import shutil
 from pathlib import Path
 from typing import List, AnyStr
@@ -149,7 +150,8 @@ class CompileHandler(MakeHandler):
         challenge_id = challenge.id()
 
         if challenge.has_shared_objects():
-            lib_polls_dir = Path(self.app.config.get_config('lib'), 'polls')
+            lib_arch = 'lib64' if '64bit' in platform.architecture()[0] else 'lib32'
+            lib_polls_dir = Path(self.app.config.get_config(lib_arch), 'polls')
             lib_id_path = lib_polls_dir / f"lib{challenge_id}.so"
 
             if lib_id_path.exists():

@@ -61,7 +61,7 @@ class Sanity(Base):
 
     id = Column('id', Integer, primary_key=True)
     cid = Column('cid', String, ForeignKey('metadata.id'), nullable=False)
-    iid = Column('iid', Integer, ForeignKey('instance.id'), nullable=False)
+    iid = Column('iid', Integer, ForeignKey('instance.id'))
     instance = relationship("Instance", back_populates="sanity")
     status = Column('status', String, nullable=False)
 
