@@ -1,11 +1,9 @@
-from sqlalchemy.orm import Session
 from tabulate import tabulate
 from cement import Controller, ex
 
 from cgcrepair.core.corpus.cwe_parser import CWEParser
 from cgcrepair.core.exc import CGCRepairError
-from cgcrepair.core.handlers.database import Sanity, TestOutcome
-from cgcrepair.core.tests import Tests
+from cgcrepair.core.handlers.database import Sanity
 
 
 class Database(Controller):
@@ -69,33 +67,39 @@ class Database(Controller):
                                             'action': 'store_true', 'required': False}),
                    (['-pp', '--poll_pass'], {'help': 'Selects checks with at least one poll passing.',
                                              'action': 'store_true', 'required': False}),
+                   (['-M', '--missing'], {'help': 'Lists challenges without sanity check.',
+                                          'action': 'store_true', 'required': False}),
                    ]
     )
     def sanity(self):
         instance_handler = self.app.handler.get('database', 'instance', setup=True)
         table = []
+        filters = {}
 
-        with Session(self.app.db.engine) as session, session.begin():
-            filters = {}
+        if self.app.pargs.missing:
+            metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+            checks = [sc.cid for sc in self.app.db.filter(Sanity, filters)]
+            print([m.id for m in metadata_handler.all() if m.id not in checks])
+            exit(0)
 
-            if self.app.pargs.iid:
-                filters[Sanity.iid] = lambda iid: iid == self.app.pargs.iid
-            if self.app.pargs.passed:
-                filters[Sanity.status] = lambda status: status == 'Passed'
+        if self.app.pargs.iid:
+            filters[Sanity.iid] = lambda iid: iid == self.app.pargs.iid
+        if self.app.pargs.passed:
+            filters[Sanity.status] = lambda status: status == 'Passed'
 
-            for sc in self.app.db.filter(Sanity, filters):
-                instance = instance_handler.get(sc.iid)
-                outcomes = instance_handler.get_test_outcome(sc.iid)
+        for sc in self.app.db.filter(Sanity, filters):
+            instance = instance_handler.get(sc.iid)
+            outcomes = instance_handler.get_test_outcome(sc.iid)
 
-                if self.app.pargs.pov_pass:
-                    if True not in [not o.passed and o.sig == 11 for o in outcomes if o.is_pov]:
-                        continue
+            if self.app.pargs.pov_pass:
+                if True not in [not o.passed and o.sig == 11 for o in outcomes if o.is_pov]:
+                    continue
 
-                if self.app.pargs.poll_pass:
-                    if True not in [o.passed and not o.failed for o in outcomes if not o.is_pov]:
-                        continue
+            if self.app.pargs.poll_pass:
+                if True not in [o.passed and not o.failed for o in outcomes if not o.is_pov]:
+                    continue
 
-                table.append([sc.id, instance.name, sc.cid, instance.id, sc.status])
+            table.append([sc.id, instance.name, sc.cid, instance.id, sc.status])
 
             # str_outcomes = '; '.join([f"{o.name}: {str(o.passed)[0]}|{o.exit_status}|{o.sig}" for o in outcomes])
 
