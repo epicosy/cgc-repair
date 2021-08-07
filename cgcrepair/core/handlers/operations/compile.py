@@ -152,6 +152,7 @@ class CompileHandler(MakeHandler):
         if challenge.has_shared_objects():
             lib_arch = 'lib64' if '64bit' in platform.architecture()[0] else 'lib32'
             lib_polls_dir = Path(self.app.config.get_config(lib_arch), 'polls')
+            self.env["LD_LIBRARY_PATH"] = str(lib_polls_dir) + ":" + self.env["LD_LIBRARY_PATH"]
             lib_id_path = lib_polls_dir / f"lib{challenge_id}.so"
 
             if lib_id_path.exists():
