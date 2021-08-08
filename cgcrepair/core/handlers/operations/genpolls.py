@@ -24,6 +24,7 @@ class GenPollsHandler(CommandsHandler):
         compile_handler = self.app.handler.get('commands', 'compile', setup=True)
         compile_handler.set()
         compile_handler.install_shared_objects(challenge)
+        self.env.update(compile_handler.env)
 
         if compile_handler.error:
             raise CommandError(compile_handler.error)
