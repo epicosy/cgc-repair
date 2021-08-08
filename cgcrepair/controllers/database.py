@@ -92,11 +92,11 @@ class Database(Controller):
     )
     def sanity(self):
         instance_handler = self.app.handler.get('database', 'instance', setup=True)
+        metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
         table = []
         filters = {}
 
         if self.app.pargs.missing:
-            metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
             checks = [sc.cid for sc in self.app.db.filter(Sanity, filters)]
             print([m.id for m in metadata_handler.all() if m.id not in checks])
             exit(0)
@@ -107,18 +107,22 @@ class Database(Controller):
             filters[Sanity.status] = lambda status: status == 'Passed'
 
         for sc in self.app.db.filter(Sanity, filters):
-            instance = instance_handler.get(sc.iid)
-            outcomes = instance_handler.get_test_outcome(sc.iid)
+            if sc.iid:
+                metadata = metadata_handler.get(sc.cid)
+                table.append([sc.id, metadata.name, sc.cid, ' - ', sc.status])
+            else:
+                instance = instance_handler.get(sc.iid)
+                outcomes = instance_handler.get_test_outcome(sc.iid)
 
-            if self.app.pargs.pov_pass:
-                if True not in [not o.passed and o.sig == 11 for o in outcomes if o.is_pov]:
-                    continue
+                if self.app.pargs.pov_pass:
+                    if True not in [not o.passed and o.sig == 11 for o in outcomes if o.is_pov]:
+                        continue
 
-            if self.app.pargs.poll_pass:
-                if True not in [o.passed and not o.failed for o in outcomes if not o.is_pov]:
-                    continue
+                if self.app.pargs.poll_pass:
+                    if True not in [o.passed and not o.failed for o in outcomes if not o.is_pov]:
+                        continue
 
-            table.append([sc.id, instance.name, sc.cid, instance.id, sc.status])
+                table.append([sc.id, instance.name, sc.cid, instance.id, sc.status])
 
             # str_outcomes = '; '.join([f"{o.name}: {str(o.passed)[0]}|{o.exit_status}|{o.sig}" for o in outcomes])
 
