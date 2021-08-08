@@ -108,9 +108,6 @@ class Database(Controller):
 
         for sc in self.app.db.filter(Sanity, filters):
             if sc.iid:
-                metadata = metadata_handler.get(sc.cid)
-                table.append([sc.id, metadata.name, sc.cid, ' - ', sc.status])
-            else:
                 instance = instance_handler.get(sc.iid)
                 outcomes = instance_handler.get_test_outcome(sc.iid)
 
@@ -123,6 +120,9 @@ class Database(Controller):
                         continue
 
                 table.append([sc.id, instance.name, sc.cid, instance.id, sc.status])
+            else:
+                metadata = metadata_handler.get(sc.cid)
+                table.append([sc.id, metadata.name, sc.cid, ' - ', sc.status])
 
             # str_outcomes = '; '.join([f"{o.name}: {str(o.passed)[0]}|{o.exit_status}|{o.sig}" for o in outcomes])
 
