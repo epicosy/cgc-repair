@@ -52,6 +52,8 @@ class Database(Controller):
                                      'required': False}),
             (['-M', '--metadata'], {'help': 'Lists metadata in the database.', 'action': 'store_true',
                                     'required': False}),
+            (['-S', '--shared'], {'help': 'Lists challenges status on shared objects.', 'action': 'store_true',
+                                  'required': False}),
             (['-n', '--name'], {'help': 'Lists only the name of the record in the table.', 'action': 'store_true',
                                 'required': False})
         ]
@@ -75,6 +77,18 @@ class Database(Controller):
             else:
                 self.app.render({'header': "Id | Name | CWE | Nº POVs | LOC | Vuln LOC | Patch LOC | Vuln Files",
                                  'collection': metadata}, 'list.jinja2')
+
+        if self.app.pargs.shared:
+            metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+            corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+            table = []
+
+            for m in metadata_handler.all():
+                challenge = corpus_handler.get(m.name)
+                if challenge.has_shared_objects():
+                    table.append([m.name, m.id])
+
+            print(tabulate(table, headers=['Challenge Name', 'Challenge Id']))
 
     @ex(
         help="List the sanity checks",
