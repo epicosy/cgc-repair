@@ -70,7 +70,7 @@ class SanityHandler(CommandsHandler):
 
         genpolls_handler = self.app.handler.get('commands', 'genpolls', setup=True)
         genpolls_handler.set()
-        genpolls_handler.run(challenge, self.app.pargs.count)
+        genpolls_handler.run(challenge, self.app.pargs.genpolls)
 
         if genpolls_handler.error:
             self.app.log.error(f"Gen Polls Failed: {genpolls_handler.error}")
@@ -78,7 +78,7 @@ class SanityHandler(CommandsHandler):
 
             return False
 
-        self.app.log.info(f"Gen Polls: generated {self.app.pargs.count} polls")
+        self.app.log.info(f"Gen Polls: generated {self.app.pargs.genpolls} polls")
         return True
 
     def check_prepare(self, challenge: Challenge, working_dir: Path, sanity: Sanity):
@@ -130,7 +130,7 @@ class SanityHandler(CommandsHandler):
 
         for outcome in outcomes:
             if not outcome.passed or outcome.exit_status != 0:
-                if not outcome.passed and outcome.is_pov:
+                if not outcome.passed and outcome.is_pov and outcome.sig == 11:
                     continue
                 self.app.log.error(f"Failed {outcome.name} {outcome.passed}")
                 fails.append(f"{outcome.name} {outcome.passed}")

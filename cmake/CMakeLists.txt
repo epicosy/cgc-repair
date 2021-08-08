@@ -254,7 +254,7 @@ function(buildSO)
         target_link_libraries(${LIB_NAME} ${LIB_CGC})
 
 	    INSTALL(TARGETS ${LIB_NAME}
-		LIBRARY DESTINATION /usr/local/lib/cgc/polls
+		LIBRARY DESTINATION $ENV{CGC_INCLUDE_DIR}/polls
 	)
     endif()
 endfunction(buildSO)
