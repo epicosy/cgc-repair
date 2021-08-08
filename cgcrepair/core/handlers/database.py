@@ -213,13 +213,14 @@ class Database:
                 session.expunge_all()
                 return attr_result
 
-    def filter(self, entity: Base, filters: Dict[Any, Callable]):
+    def filter(self, entity: Base, filters: Dict[Any, Callable], distinct: Any = None):
         with Session(self.engine) as session, session.begin():
             query = session.query(entity)
 
             for attr, exp in filters.items():
                 query = query.filter(exp(attr))
-
+            if distinct:
+                query = query.distinct(distinct)
             session.expunge_all()
             return query
 

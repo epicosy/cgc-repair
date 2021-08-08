@@ -86,6 +86,8 @@ class Database(Controller):
                                             'action': 'store_true', 'required': False}),
                    (['-pp', '--poll_pass'], {'help': 'Selects checks with at least one poll passing.',
                                              'action': 'store_true', 'required': False}),
+                   (['-d', '--distinct'], {'help': 'Selects distinct checks based on challenge id.',
+                                           'action': 'store_true', 'required': False}),
                    (['-M', '--missing'], {'help': 'Lists challenges without sanity check.',
                                           'action': 'store_true', 'required': False}),
                    ]
@@ -106,7 +108,7 @@ class Database(Controller):
         if self.app.pargs.passed:
             filters[Sanity.status] = lambda status: status == 'Passed'
 
-        for sc in self.app.db.filter(Sanity, filters):
+        for sc in self.app.db.filter(Sanity, filters, Sanity.cid if self.app.pargs.distinct else None):
             if sc.iid:
                 instance = instance_handler.get(sc.iid)
                 outcomes = instance_handler.get_test_outcome(sc.iid)
