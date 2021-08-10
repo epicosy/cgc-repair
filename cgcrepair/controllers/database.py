@@ -1,9 +1,17 @@
 from tabulate import tabulate
 from cement import Controller, ex
-
+from argparse import ArgumentTypeError
 from cgcrepair.core.corpus.cwe_parser import CWEParser
 from cgcrepair.core.exc import CGCRepairError
 from cgcrepair.core.handlers.database import Sanity
+
+
+def check_min(x):
+    x = int(x)
+
+    if x < 1:
+        raise ArgumentTypeError("Minimum value is 1")
+    return x
 
 
 class Database(Controller):
@@ -89,8 +97,8 @@ class Database(Controller):
                                          'required': False}),
                    (['-vp', '--pov_pass'], {'help': 'Selects checks with at least one pov passing.',
                                             'action': 'store_true', 'required': False}),
-                   (['-pp', '--poll_pass'], {'help': 'Selects checks with at least one poll passing.',
-                                             'action': 'store_true', 'required': False}),
+                   (['-pp', '--poll_pass'], {'help': 'Selects checks with at least n polls passing.',
+                                             'type': check_min, 'required': False}),
                    (['-d', '--distinct'], {'help': 'Selects distinct checks based on challenge id.',
                                            'action': 'store_true', 'required': False}),
                    (['-M', '--missing'], {'help': 'Lists challenges without sanity check.',
@@ -119,11 +127,11 @@ class Database(Controller):
                 outcomes = instance_handler.get_test_outcome(sc.iid)
 
                 if self.app.pargs.pov_pass:
-                    if True not in [not o.passed and o.sig == 11 for o in outcomes if o.is_pov]:
+                    if len([o for o in outcomes if o.is_pov and o.result]) < 1:
                         continue
 
                 if self.app.pargs.poll_pass:
-                    if True not in [o.passed and not o.failed for o in outcomes if not o.is_pov]:
+                    if len([o for o in outcomes if not o.is_pov and o.result]) < self.app.pargs.poll_pass:
                         continue
 
                 table.append([sc.id, instance.name, sc.cid, instance.id, sc.status])
