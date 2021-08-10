@@ -43,7 +43,7 @@ class TestHandler(CommandsHandler):
                 super().__call__(cmd_str=' '.join(cmd_str), cmd_cwd=str(self.app.config.get_config('tools')),
                                  timeout=timeout, raise_err=False, exit_err=False,
                                  msg=f"Testing {test.name} on {test.file.name}\n")
-                self.gcov(working, test.name)
+
                 test_outcome = self._process_result(test, challenge_name=challenge_paths.name)
                 test_outcome.instance_id = instance.id
                 test_outcome.co_id = instance.pointer
@@ -60,22 +60,6 @@ class TestHandler(CommandsHandler):
 
     def unset(self):
         super().unset()
-
-    def gcov(self, working: WorkingPaths, test_name: str):
-        gcov_folder = working.root / 'gcov' / test_name
-        gcov_folder.mkdir(parents=True, exist_ok=True)
-
-        for f in working.cmake.iterdir():
-            if not f.is_dir():
-                continue
-
-            if not list(f.rglob("*.gcno")):
-                continue
-
-            gcov = self.app.config.get_config('gcov')
-            super().__call__(cmd_str=f"{gcov} *.gcno", cmd_cwd=str(f))
-            super().__call__(cmd_str=f"{gcov} *.gcda", cmd_cwd=str(f), msg=f"Generating coverage files")
-            super().__call__(cmd_str=f"cp *.gcov {gcov_folder}", cmd_cwd=str(f))
 
     def get_timeout(self):
         # TODO: add/remove margin for execution
