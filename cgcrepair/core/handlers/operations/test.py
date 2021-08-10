@@ -48,6 +48,8 @@ class TestHandler(CommandsHandler):
                 test_outcome.instance_id = instance.id
                 test_outcome.co_id = instance.pointer
                 test_outcome.duration = round(self.duration, 3)
+                if test_outcome.duration > timeout and test_outcome.error and test_outcome.exit_status != 0:
+                    test_outcome.error = "Test timed out"
                 test_outcome.exit_status = self.return_code
                 t_id = self.app.db.add(test_outcome)
                 self.app.log.debug(f"Inserted 'test outcome' with id {t_id} for instance {instance.id}.")

@@ -44,9 +44,11 @@ class SanityHandler(CommandsHandler):
             self.error = str(e)
             self.app.log.error(f"The following exception was raised for the challenge {challenge.name}")
             self.app.log.error(traceback.format_exc())
+            sanity.status = "Exception"
         finally:
             self.unset()
             self.app.db.add(sanity)
+
             if not self.app.pargs.keep:
                 self.dispose(working_dir)
 
