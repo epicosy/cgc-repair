@@ -30,7 +30,6 @@ class Database(Controller):
         help='Deletes tables from database.'
     )
     def destroy(self):
-        # TODO: make this work
         self.app.log.warning(f"This operation will delete all tables in the database: {self.app.db.engine.url}")
         res = input("Are you sure you want to continue this operation? (y/n) ")
 
