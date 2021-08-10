@@ -1,12 +1,9 @@
-import contextlib
-
 from tabulate import tabulate
 from cement import Controller, ex
 
 from cgcrepair.core.corpus.cwe_parser import CWEParser
 from cgcrepair.core.exc import CGCRepairError
 from cgcrepair.core.handlers.database import Sanity
-from sqlalchemy import MetaData
 
 
 class Database(Controller):
@@ -36,14 +33,9 @@ class Database(Controller):
         # TODO: make this work
         self.app.log.warning(f"This operation will delete all tables in the database: {self.app.db.engine.url}")
         res = input("Are you sure you want to continue this operation? (y/n) ")
+
         if res in ["Yes", "Y", "y", "yes"]:
-            with contextlib.closing(self.app.db.engine.connect()) as con:
-                trans = con.begin()
-                self.app.log.warning(str(MetaData(bind=self.app.db.engine).sorted_tables))
-                for table in reversed(MetaData().sorted_tables):
-                    self.app.log.warning(f"Deleting {table}")
-                    con.execute(table.delete())
-                trans.commit()
+            self.app.db.destroy()
 
     @ex(
         help='Lists specified table in the database.',
@@ -190,7 +182,6 @@ class Database(Controller):
 
         if self.app.pargs.test:
             outcomes = instance_handler.get_test_outcome(self.app.pargs.iid)
-
-            self.app.render({'header': "ID | Compile Outcome ID | Name | Error | Exit Status | Passed | Duration | "
-                                       "Is POV | Signal | Failed | Total",
-                             'collection': outcomes}, 'list.jinja2')
+            if outcomes:
+                table = [o.to_dict().values() for o in outcomes]
+                print(tabulate(table, headers=outcomes[0].to_dict().keys()))

@@ -58,6 +58,9 @@ log.colorlog:
 ### Where the log file lives (no log file by default)
   file: '/tmp/cgc-repair.log'
 
+### Whether or not to log the database queries
+  database: false
+
 ### The level for which to log.  One of: info, warning, error, fatal, debug
   level: info
 

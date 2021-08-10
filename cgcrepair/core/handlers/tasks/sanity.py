@@ -26,11 +26,18 @@ class SanityHandler(CommandsHandler):
         sanity.cid = challenge.cid
 
         try:
-            if self.check_genpolls(challenge, sanity):
-                if self.check_genpovs(challenge, sanity):
-                    if self.check_prepare(challenge, working_dir, sanity):
-                        if self.check_test(challenge, sanity):
-                            return True
+            if self.app.pargs.genpolls:
+                if not self.check_genpolls(challenge, sanity):
+                    return False
+
+            if self.app.pargs.genpovs:
+                if not self.check_genpovs(challenge, sanity):
+                    return False
+
+            if self.check_prepare(challenge, working_dir, sanity):
+                if self.check_test(challenge, sanity):
+                    return True
+
             return False
 
         except Exception as e:
@@ -126,21 +133,15 @@ class SanityHandler(CommandsHandler):
 
         outcomes = instance_handler.get_test_outcome(instance.id)
 
-        neg_fails, pos_fails, passing, fails = [], [], [], []
+        passing, fails = [], []
 
         for outcome in outcomes:
-            if not outcome.passed or outcome.exit_status != 0:
-                if not outcome.passed and outcome.is_pov and outcome.sig == 11:
-                    continue
+            if outcome.result and not outcome.error:
+                passing.append(f"{outcome.name} {outcome.passed}")
+
+            else:
                 self.app.log.error(f"Failed {outcome.name} {outcome.passed}")
                 fails.append(f"{outcome.name} {outcome.passed}")
-
-                if outcome.is_pov:
-                    neg_fails.append(outcome.name)
-                else:
-                    pos_fails.append(outcome.name)
-            else:
-                passing.append(f"{outcome.name} {outcome.passed}")
 
         if not outcomes or fails:
             self.app.log.error(f"Failed tests: {fails}")

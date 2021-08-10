@@ -1,3 +1,5 @@
+import contextlib
+
 from pathlib import Path
 from typing import Union, Dict, Any, Callable, List
 
@@ -6,6 +8,8 @@ from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, relationship
 from sqlalchemy import inspect
+from sqlalchemy import MetaData
+
 
 from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.corpus.cwe_parser import CWEParser
@@ -25,19 +29,29 @@ class TestOutcome(Base):
     instance = relationship("Instance", back_populates="test_outcome")
     compile_outcome = relationship("CompileOutcome", back_populates="test_outcome")
     name = Column('name', String, nullable=False)
+    is_pov = Column('is_pov', Boolean, nullable=False)
+    result = Column('result', Boolean, nullable=False)
+    status = Column('status', String, nullable=True)
+    total = Column('total', Integer, nullable=True)
+    passed = Column('passed', Integer, nullable=True)
+    failed = Column('failed', Integer, nullable=True)
     error = Column('error', String, nullable=True)
     exit_status = Column('exit_status', Integer, nullable=False)
-    passed = Column('passed', Boolean, nullable=False)
+    sig = Column('sig', Integer, nullable=True)
     duration = Column('duration', Float, nullable=False)
-    is_pov = Column('is_pov', Boolean, nullable=False)
-    sig = Column('sig', Integer, nullable=False)
-    failed = Column('failed', Integer, nullable=True)
-    total = Column('total', Integer, nullable=False)
+
+    def get_clean_error(self):
+        return self.error.strip().replace('\n', ' ') if self.error else ''
 
     def __str__(self):
-        clean_error = self.error.strip().replace('\n', ' ') if self.error else ''
-        return f"{self.id} | {self.co_id} | {self.name} | {clean_error} | {self.exit_status} | {self.passed} | " \
-               f"{self.duration} | {self.is_pov} | {self.sig} | {self.failed} | {self.total}"
+        return f"{self.id} | {self.co_id} | {self.name} | {self.is_pov} | {self.result} | {self.status} | {self.total}" \
+               f"| {self.passed} | {self.failed} | {self.get_clean_error()} | {self.exit_status} | {self.sig} | {self.duration}"
+
+    def to_dict(self):
+        return {'id': self.id, 'compile id': self.co_id, 'name': self.name, 'is pov': self.is_pov,
+                'result': self.result, 'status': self.status, 'total': self.total, 'passed': self.passed,
+                'failed': self.failed, 'error': self.get_clean_error(), 'exit status': self.exit_status,
+                'signal': self.sig, 'duration': self.duration}
 
 
 class CompileOutcome(Base):
@@ -186,6 +200,13 @@ class Database:
 
             if hasattr(entity, 'id'):
                 return entity.id
+
+    def destroy(self):
+        # metadata = MetaData(self.engine, reflect=True)
+        with contextlib.closing(self.engine.connect()) as con:
+            trans = con.begin()
+            Base.metadata.drop_all(bind=self.engine)
+            trans.commit()
 
     def delete(self, entity: Base, entity_id: Union[int, str]):
         with Session(self.engine) as session, session.begin():

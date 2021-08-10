@@ -106,23 +106,23 @@ class TestHandler(CommandsHandler):
     def _process_flags(self, test_outcome: TestOutcome):
         if test_outcome.is_pov and self.neg_pov:
             # Invert negative test's result
-            test_outcome.passed = not test_outcome.passed
+            test_outcome.result = not test_outcome.result
 
-            if test_outcome.passed:
+            if test_outcome.result:
                 self.failed = True
 
-        if self.print_ids and test_outcome.passed:
+        if self.print_ids and test_outcome.result:
             if self.only_numbers:
                 print(test_outcome.name[1:])
             else:
                 print(test_outcome.name)
         if self.print_class:
-            print("PASS" if test_outcome.passed else 'FAIL')
+            print("PASS" if test_outcome.result else 'FAIL')
 
         if self.out_file is not None:
             self.write_result(test_outcome)
 
-        if not test_outcome.passed or test_outcome.error:
+        if not test_outcome.result or test_outcome.error:
             if not test_outcome.is_pov:
                 self.failed = True
             elif not self.neg_pov:
@@ -154,4 +154,4 @@ class TestHandler(CommandsHandler):
         if not self.write_fail and not test_outcome.passed:
             return
         with out_file.open(mode="a") as of:
-            of.write(f"{test_outcome.name} {test_outcome.passed}\n")
+            of.write(f"{test_outcome.name} {test_outcome.result}\n")
