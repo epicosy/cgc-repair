@@ -8,7 +8,7 @@ from threading import Timer
 
 from cement import Handler
 
-from cgcrepair.core.exc import CommandError
+from cgcrepair.core.exc import CommandError, CGCRepairError
 from cgcrepair.core.interfaces import CommandsInterface
 
 
@@ -99,10 +99,14 @@ def _timer_out(p: subprocess.Popen, cmd: CommandsHandler):
     process = psutil.Process(p.pid)
     cmd.return_code = p.returncode if p.returncode else -3
 
-    for proc in process.children(recursive=True):
-        proc.kill()
+    try:
+        for proc in process.children(recursive=True):
+            if psutil.pid_exists(proc.pid):
+                proc.kill()
 
-    process.kill()
+        process.kill()
+    except psutil.NoSuchProcess as npe:
+        cmd.app.log.warning(str(npe))
 
 
 def load(app):
