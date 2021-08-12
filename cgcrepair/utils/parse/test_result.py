@@ -34,17 +34,16 @@ def get_outcome(output: str, test: Test, sig: int):
         test_outcome.error = "Test timed out"
         test_outcome.result = False
 
-    elif not test.is_pov:
-        if not_ok_polls:
-            test_outcome.error = "Polls failed"
+    elif not test.is_pov and not_ok_polls:
+        test_outcome.error = "Polls failed"
 
-            for _, msg in not_ok_polls:
-                test_outcome.error += f"\n{msg}"
+        for _, msg in not_ok_polls:
+            test_outcome.error += f"\n{msg}"
 
-            test_outcome.result = False
-        elif test_outcome.failed > 0:
-            test_outcome.error = "Polls failed"
-            test_outcome.result = False
+        test_outcome.result = False
+    elif not test.is_pov and test_outcome.failed > 0:
+        test_outcome.error = "Polls failed"
+        test_outcome.result = False
 
     # If the test failed to run, consider it failed
     elif 'TOTAL TESTS' not in output:
