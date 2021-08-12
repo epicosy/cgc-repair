@@ -43,6 +43,7 @@ cgcrepair:
 
 ### CWE Parsing
   cwe_level: 3
+  metadata: "/etc/cgcrepair/metadata.yml"
 
 ### Database configs
   dialect: 'postgresql'

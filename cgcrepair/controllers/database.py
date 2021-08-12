@@ -1,3 +1,4 @@
+import yaml
 from tabulate import tabulate
 from cement import Controller, ex
 from argparse import ArgumentTypeError
@@ -150,18 +151,21 @@ class Database(Controller):
     )
     def cwes(self):
         metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
-        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
         metadata = metadata_handler.all()
+        table = []
+
+        with open(self.app.config.get_config("metadata")) as mp:
+            yaml_metadata = yaml.load(mp, Loader=yaml.FullLoader)
 
         for m in metadata:
-            challenge = corpus_handler.get(m.name)
-            cwe_parser = CWEParser(description=challenge.info(), level=0)
-            # TODO: get the real tests
-            # tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
-            neg_tests = [f for f in challenge.paths.source.iterdir() if f.is_dir() and f.name.startswith("pov")]
+            if m.id in yaml_metadata:
+                for pov, pov_metadata in yaml_metadata[m.id]['pov'].items():
+                    row = [pov_metadata['cwe'], m.id, m.name, f"{m.id}_{pov}", str(pov_metadata['related']) if 'related' in pov_metadata else '-']
+                    table.append(row)
+            else:
+                table.append(['', m.id, m.name, '-', '-'])
 
-            for pov, cwe in zip(neg_tests, cwe_parser.cwe_ids(number=False)):
-                print(cwe, challenge.id(), challenge.name, challenge.id() + '_' + pov.name[-1])
+        print(tabulate(table, headers=['CWE', 'Challenge Id', 'Challenge Name', 'POV Id', 'Related']))
 
     @ex(
         help='Lists outcomes for a specific instance.',

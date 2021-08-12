@@ -26,7 +26,6 @@ def init_metadata(app):
                             debug=app.config.get('log.colorlog', 'database'))
 
         if not database.query(Metadata):
-
             corpus_handler = app.handler.get('corpus', 'corpus', setup=True)
             metadata_handler = app.handler.get('database', 'metadata', setup=True)
             challenges = corpus_handler.get_challenges()

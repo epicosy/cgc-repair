@@ -61,7 +61,7 @@ class SanityHandler(CommandsHandler):
             return True
 
         genpovs_handler = self.app.handler.get('commands', 'genpovs', setup=True)
-        genpovs_handler.set()
+        genpovs_handler.set(m32=True if self.app.pargs.m32 else False)
         genpovs_handler.run(challenge)
 
         if genpovs_handler.error:
@@ -106,6 +106,8 @@ class SanityHandler(CommandsHandler):
 
         # Compile
         compile_handler = self.app.handler.get('commands', 'compile', setup=True)
+        if self.app.pargs.m32:
+            compile_handler.env["M32"] = "True"
         compile_handler.set(tag="sanity")
         instance_handler = self.app.handler.get('database', 'instance', setup=True)
         instance = instance_handler.get(sanity.iid)

@@ -35,7 +35,7 @@ class Task(Controller):
         help='Sanity checks for challenges.',
         arguments=[(['--cid'], {'help': 'The challenge id.', 'type': str, 'nargs': '+', 'required': False}),
                    (['--timeout'], {'type': int, 'default': 60, 'help': 'The timeout for tests in seconds.'}),
-                   (['--type'], {'type': str, 'default': None, 'help': 'Flag for selecting tests type Polls/POVs.'}),
+                   (['--m32'], {'action': 'store_true', 'help': 'Flag for compiling for 32 bit arch.'}),
                    (['--genpolls'], {'type': int, 'default': None, 'help': 'Number of polls to generate.'}),
                    (['--threads'], {'type': int, 'default': 2, 'help': 'Number of threads to use.'}),
                    (['--genpovs'], {'action': 'store_true', 'help': 'Flag for enabling POVs generation.'}),
