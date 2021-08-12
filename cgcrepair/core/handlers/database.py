@@ -162,6 +162,7 @@ class MetadataHandler(DatabaseInterface, Handler):
         metadata.name = challenge.name
         metadata.id = challenge.id()
         metadata.excluded = False
+        metadata.multi_cb = manifest.multi_cb
         metadata.total_lines = manifest.total_lines
         metadata.vuln_lines = manifest.vuln_lines
         metadata.patch_lines = manifest.patch_lines

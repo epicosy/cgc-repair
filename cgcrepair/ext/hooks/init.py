@@ -42,6 +42,11 @@ def init_metadata(app):
                     os.system(f"rm -rf {challenge.paths.source}")
                     continue
 
+                if metadata.multi_cb:
+                    app.log.info(f"Removing challenge with multiple binaries: {challenge_name}.")
+                    os.system(f"rm -rf {challenge.paths.source}")
+                    continue
+
                 database.add(metadata)
 
         app.extend('db', database)

@@ -37,11 +37,9 @@ def get_outcome(output: str, test: Test, sig: int):
     elif not test.is_pov:
         if not_ok_polls:
             test_outcome.error = "Polls failed"
-            test_outcome.failed += 0
 
-            for fails, msg in not_ok_polls:
+            for _, msg in not_ok_polls:
                 test_outcome.error += f"\n{msg}"
-                test_outcome.failed += fails
 
             test_outcome.result = False
         elif test_outcome.failed > 0:

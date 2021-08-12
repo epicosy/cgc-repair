@@ -25,6 +25,7 @@ class Manifest:
         self.total_lines = 0
         self.vuln_lines = 0
         self.patch_lines = 0
+        self.multi_cb = len([d for d in self.root.iterdir() if d.is_dir() and d.name.startswith('cb_')]) > 0
         self.collect_files()
 
     def collect_files(self) -> NoReturn:
