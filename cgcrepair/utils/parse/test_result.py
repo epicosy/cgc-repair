@@ -23,15 +23,15 @@ def get_outcome(output: str, test: Test, sig: int):
     test_outcome.passed = 0
     test_outcome.name = test.name
     test_outcome.is_pov = test.is_pov
-    test_outcome.polls_failed = polls_failed(output)
+    test_outcome.failed = polls_failed(output)
     test_outcome.sig = sig
 
     if 'timed out' in output:
         test_outcome.error = "Test timed out"
         test_outcome.result = True
 
-    elif not test.is_pov and test_outcome.polls_failed > 0:
-        test_outcome.error = f"{test_outcome.polls_failed} polls failed"
+    elif not test.is_pov and test_outcome.failed > 0:
+        test_outcome.error = f"{test_outcome.failed} polls failed"
         test_outcome.result = True
 
     # If the test failed to run, consider it failed
