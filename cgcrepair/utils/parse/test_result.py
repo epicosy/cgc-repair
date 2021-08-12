@@ -9,6 +9,7 @@ polls_failed_pattern = "# polls failed: (\d{1,4})"
 pid_debug_pattern = "# \[DEBUG\] pid: (\d{1,7}), sig: (\d{1,2})"
 pid_process_pattern = "# Process generated signal \(pid: (\d{1,7}), signal: (\d{1,2})\)"
 not_ok_pattern = "not ok - (.*)"
+not_ok_pattern_polls = "not ok (\d{1,4}) - (.*)"
 ok_pattern = "ok - (.*)"
 
 pov_signals = [signal.SIGSEGV, signal.SIGILL, signal.SIGBUS]
@@ -25,14 +26,27 @@ def get_outcome(output: str, test: Test, sig: int):
     test_outcome.is_pov = test.is_pov
     test_outcome.failed = polls_failed(output)
     test_outcome.sig = sig
+    ok = match_pattern(output, ok_pattern)
+    not_ok = match_pattern(output, not_ok_pattern)
+    not_ok_polls = re.findall(not_ok_pattern_polls, output)
 
     if 'timed out' in output:
         test_outcome.error = "Test timed out"
         test_outcome.result = False
 
-    elif not test.is_pov and test_outcome.failed > 0:
-        test_outcome.error = "Polls failed"
-        test_outcome.result = False
+    elif not test.is_pov:
+        if not_ok_polls:
+            test_outcome.error = "Polls failed"
+            test_outcome.failed += 0
+
+            for fails, msg in not_ok_polls:
+                test_outcome.error += f"\n{msg}"
+                test_outcome.failed += fails
+
+            test_outcome.result = False
+        elif test_outcome.failed > 0:
+            test_outcome.error = "Polls failed"
+            test_outcome.result = False
 
     # If the test failed to run, consider it failed
     elif 'TOTAL TESTS' not in output:
@@ -42,8 +56,6 @@ def get_outcome(output: str, test: Test, sig: int):
     elif 'TOTAL TESTS: ' in output:
         test_outcome.total = int(output.split('TOTAL TESTS: ')[1].split('\n')[0])
         test_outcome.passed = int(output.split('TOTAL PASSED: ')[1].split('\n')[0])
-        ok = match_pattern(output, ok_pattern)
-        not_ok = match_pattern(output, not_ok_pattern)
 
         if not_ok:
             test_outcome.status = not_ok
