@@ -1,0 +1,189 @@
+YAN01_00010:
+  program: "BitBlaster"
+  pov:
+    1:
+      cwe: 824
+      related: [476]
+      generic: ["NULL Pointer Dereference", "Access of Uninitialized Pointer"]
+      type: 1
+
+NRFIN_00001:
+  program: "CNMP"
+  pov:
+    1:
+      cwe: 134
+      generic: ["Uncontrolled Format String"]
+      type: 2
+
+NRFIN_00041:
+  program: "AIS-Lite"
+  pov:
+    1:
+      cwe: 122
+      related: [20, 120, 129, 788]
+      generic: ["Classic heap buffer overflow", "Null pointer dereference", "Improper array bounds checking", "Access memory beyond buffer"]
+      type: 1
+
+YAN01_00007:
+  program: "Diophantine_Password_Wallet"
+  pov:
+    1-5:
+      cwe: 824
+      related: [476]
+      generic: ["Access of Uninitialized Pointer", "Null pointer dereference"]
+      type: 1
+
+CROMU_00023:
+  program: "Divelogger2"
+  pov:
+    1:
+      cwe: 119
+      generic: ["Out of bounds write"]
+      type: 1
+
+CROMU_00041:
+  program: "Email_System_2"
+  pov:
+    1:
+      cwe: 121
+      generic: ["Buffer overflow on the stack"]
+      type: 1
+    2:
+      cwe: 121
+      generic: ["Buffer overflow on the stack"]
+      type: 1
+
+NRFIN_00039:
+  program: "FablesReport"
+  pov:
+    1:
+      cwe: 190
+      generic: ["Integer Overflow or Wraparound"]
+      type: 1
+    2:
+      cwe: 190
+      related: [123]
+      generic: ["Integer Overflow or Wraparound", "Write-what-where Condition"]
+      type: 1
+    3:
+      cwe: 190
+      related: [788]
+      generic: ["Integer Overflow or Wraparound", "Access of Memory Location After End of Buffer"]
+      type: 1
+    4:
+      cwe: 763
+      generic: ["Release of Invalid Pointer or Reference"]
+      type: 1
+    5:
+      cwe: 190
+      related: [122]
+      generic: ["Heap-based Buffer Overflow", "Integer Overflow or Wraparound"]
+      type: 1
+
+NRFIN_00022:
+  program: "HIGHCOO"
+  pov:
+    1:
+      cwe: 680
+      related: [20, 129, 190, 191, 193]
+      generic: ["Integer underflow and overflow with wrap around", "Off-by-one-error", "Heap Buffer overflow", "Improper checking of loop invariant", "Improper Signed to Unsigned conversion", "Improper Input Validation"]
+      type: 1
+
+KPRCA_00017:
+  program: "HackMan"
+  pov:
+    1:
+      cwe: 457
+      generic: ["Unitialized stack variable usage", "Function pointer overwrite"]
+      type: 1
+
+CADET_00001:
+  program: "Palindrome"
+  pov:
+    1:
+      cwe: 121
+      generic: ["Buffer overflow on the stack"]
+      type: 1
+
+NRFIN_00020:
+  program: "SOLFEDGE"
+  pov:
+    1-2:
+      cwe: 193
+      related: [20, 129]
+      generic: ["Improper Input Validation", "Improper Validation of Array Index", "Off-by-one Error"]
+
+YAN01_00012:
+  program: "Simple_Stack_Machine"
+  pov:
+    1-3:
+      cwe: 122
+      generic: ["Heap-based Buffer Overflow"]
+      type: 1
+
+YAN01_00011:
+  program: "WordCompletion"
+  pov:
+    1:
+      cwe: 125
+      generic: ["Out of Bounds Read"]
+      type: 1
+
+NRFIN_00037:
+  program: "cotton_swab_arithmetic"
+  pov:
+    1-2:
+      cwe: 367
+      generic: ["Time-of-Chceck Time-of-Use (TOCTOU)", "Out of bounds write", "Improper Input Validation", "Improper Validation of Array Index", "Null pointer dereference", "Out of bounds read"]
+      related: [20, 119, 125, 476, 787]
+      type: 1
+
+CROMU_00011:
+  program: "hawaii_sets"
+  pov:
+    1:
+      cwe: 120
+      generic: ["Stack-based buffer overflow"]
+      type: 1
+    2:
+      cwe: 400
+      generic: ["Stack overflow due to infinite recursion"]
+      type: 1
+
+CROMU_00008:
+  program: "expression_database"
+  pov:
+    1:
+      cwe: 119
+      generic: ['Out of bounds write']
+      type: 1
+
+CROMU_00001:
+  program: "basic_messaging"
+  pov:
+    1:
+      cwe: 120
+      related: [131, 190]
+      generic: ["Integer overflow", "Buffer overflow"]
+      type: 1
+
+CROMU_00009:
+  program: "RAM_based_filesystem"
+  pov:
+    1:
+      cwe: 787
+      generic: ["Incorrect array bounds check leading to buffer overflow and arbitrary writes."]
+      type: 1
+    2:
+      cwe: 476
+      generic: ["Null pointer dereference"]
+      type: 1
+
+NRFIN_00005:
+  program: "Tick-A-Tack"
+  pov:
+    1-2:
+      cwe: 476
+      related: [120]
+      generic: ["Integer Overflow", "NULL Pointer Dereference" ]
+      type: 1
