@@ -148,9 +148,9 @@ class Database(Controller):
 
     @ex(
         help="List the benchmark's CWEs",
-        arguments=(['-w'], {'help': 'Flag to print without formatting.', 'action': 'store_true', 'required': False}),
+        arguments=[(['-w'], {'help': 'Flag to print without formatting.', 'action': 'store_true', 'required': False})]
     )
-    def cwes(self):
+    def vulns(self):
         metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
         metadata = metadata_handler.all()
         table = []
@@ -164,14 +164,14 @@ class Database(Controller):
                 for pov, pov_metadata in yaml_metadata[m.id]['pov'].items():
                     row = [pov_metadata['cwe'], m.id, m.name, f"{m.id}_{pov}", str(pov_metadata['related']) if 'related' in pov_metadata else '-']
                     if self.app.pargs.w:
-                        print('\t'.join(row))
+                        print('\t'.join([str(el) for el in row]))
                     table.append(row)
             else:
-                row = ['', m.id, m.name, '-', '-']
+                row = ['-', m.id, m.name, '-', '-']
                 table.append(row)
 
             if self.app.pargs.w:
-                print('\t'.join(row))
+                print('\t'.join([str(el) for el in row]))
         if not self.app.pargs.w:
             print(tabulate(table, headers=['CWE', 'Challenge Id', 'Challenge Name', 'POV Id', 'Related']))
 
