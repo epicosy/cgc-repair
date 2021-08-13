@@ -147,7 +147,8 @@ class Database(Controller):
         # self.app.render({'header': header, 'collection': rows}, 'sanity.jinja2')
 
     @ex(
-        help="List the benchmark's CWEs"
+        help="List the benchmark's CWEs",
+        arguments=(['-w'], {'help': 'Flag to print without formatting.', 'action': 'store_true', 'required': False}),
     )
     def cwes(self):
         metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
@@ -158,14 +159,21 @@ class Database(Controller):
             yaml_metadata = yaml.load(mp, Loader=yaml.FullLoader)
 
         for m in metadata:
+            row = []
             if m.id in yaml_metadata:
                 for pov, pov_metadata in yaml_metadata[m.id]['pov'].items():
                     row = [pov_metadata['cwe'], m.id, m.name, f"{m.id}_{pov}", str(pov_metadata['related']) if 'related' in pov_metadata else '-']
+                    if self.app.pargs.w:
+                        print('\t'.join(row))
                     table.append(row)
             else:
-                table.append(['', m.id, m.name, '-', '-'])
+                row = ['', m.id, m.name, '-', '-']
+                table.append(row)
 
-        print(tabulate(table, headers=['CWE', 'Challenge Id', 'Challenge Name', 'POV Id', 'Related']))
+            if self.app.pargs.w:
+                print('\t'.join(row))
+        if not self.app.pargs.w:
+            print(tabulate(table, headers=['CWE', 'Challenge Id', 'Challenge Name', 'POV Id', 'Related']))
 
     @ex(
         help='Lists outcomes for a specific instance.',
