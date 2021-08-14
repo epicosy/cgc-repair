@@ -78,20 +78,9 @@ class Task(Controller):
         tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
         print(vuln.cid)
         # TODO: use jinja templates instead of prints
-        if self.app.pargs.neg:
-            if self.app.pargs.count:
-                print(len(tests.neg_tests))
-            else:
-                print(' '.join(tests.neg_tests.keys()))
-        elif self.app.pargs.pos:
-            if self.app.pargs.count:
-                print(len(tests.pos_tests))
-            else:
-                print(' '.join(tests.pos_tests.keys()))
+        if self.app.pargs.count:
+            print(len(tests.pos_tests))
+            print(len(tests.neg_tests))
         else:
-            if self.app.pargs.count:
-                print(len(tests.pos_tests))
-                print(len(tests.neg_tests))
-            else:
-                print(' '.join(tests.pos_tests.keys()))
-                print(' '.join(tests.neg_tests.keys()))
+            print(' '.join(tests.pos_tests.keys()))
+            print(' '.join(tests.neg_tests.keys()))
