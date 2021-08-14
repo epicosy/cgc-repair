@@ -13,7 +13,7 @@ from cgcrepair.controllers.task import Task
 from cgcrepair.core.handlers.configurations import YamlConfigurations
 from cgcrepair.core.handlers.commands import CommandsHandler
 from cgcrepair.core.handlers.corpus import CorpusHandler
-from cgcrepair.core.handlers.database import MetadataHandler
+from cgcrepair.core.handlers.database import MetadataHandler, VulnerabilityHandler
 from cgcrepair.core.handlers.operations.checkout import CheckoutHandler
 from cgcrepair.core.handlers.operations.genpolls import GenPollsHandler
 from cgcrepair.core.handlers.operations.genpovs import GenPOVsHandler
@@ -63,7 +63,7 @@ class CGCRepair(App):
         handlers = [
             Base, YamlConfigurations, CommandsHandler, CorpusHandler,
             Corpus, CheckoutHandler, GenPollsHandler, GenPOVsHandler,
-            Instance, MakeHandler, CompileHandler, TestHandler,
+            Instance, MakeHandler, CompileHandler, TestHandler, VulnerabilityHandler,
             InstanceHandler, Database, MetadataHandler, Task, SanityHandler, RunnerHandler
         ]
 

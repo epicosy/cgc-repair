@@ -3,6 +3,7 @@ from cement import Controller, ex
 from cgcrepair.core.data.store import TaskData
 from cgcrepair.core.exc import CGCRepairError
 from cgcrepair.core.handlers.database import Sanity
+from cgcrepair.core.tests import Tests
 
 
 class Task(Controller):
@@ -54,3 +55,43 @@ class Task(Controller):
 
         if sanity_handler.error:
             self.app.log.error(sanity_handler.error)
+
+    @ex(
+        help='Queries the (number of) positive and negative tests.',
+        arguments=[
+            (['--count'], {'help': "Prints the count of the tests.", 'required': False, 'action': 'store_true'}),
+            (['--vid'], {'help': 'The vulnerability id.', 'type': str, 'required': True})
+        ]
+    )
+    def triplet(self):
+        vuln_handler = self.app.handler.get('database', 'vulnerability', setup=True)
+        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+        metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+        vuln = vuln_handler.get(self.app.pargs.vid)
+
+        if not vuln:
+            self.app.log.warning(f"Vulnerability {self.app.pargs.vid} not found.")
+            return
+
+        metadata = metadata_handler.get(vuln.cid)
+        challenge = corpus_handler.get(metadata.name)
+        tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
+        print(vuln.cid)
+        # TODO: use jinja templates instead of prints
+        if self.app.pargs.neg:
+            if self.app.pargs.count:
+                print(len(tests.neg_tests))
+            else:
+                print(' '.join(tests.neg_tests.keys()))
+        elif self.app.pargs.pos:
+            if self.app.pargs.count:
+                print(len(tests.pos_tests))
+            else:
+                print(' '.join(tests.pos_tests.keys()))
+        else:
+            if self.app.pargs.count:
+                print(len(tests.pos_tests))
+                print(len(tests.neg_tests))
+            else:
+                print(' '.join(tests.pos_tests.keys()))
+                print(' '.join(tests.neg_tests.keys()))

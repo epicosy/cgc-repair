@@ -80,6 +80,16 @@ class Sanity(Base):
     status = Column('status', String, nullable=True)
 
 
+class Vulnerability(Base):
+    __tablename__ = "vulnerability"
+
+    id = Column('id', String, primary_key=True)
+    cid = Column('cid', String, ForeignKey('metadata.id'), nullable=False)
+    cwe = Column('cwe', Integer, nullable=False)
+    test = Column('test', String, nullable=False)
+    related = Column('related', String)
+
+
 class Metadata(Base):
     __tablename__ = "metadata"
 
@@ -148,6 +158,20 @@ class InstanceHandler(DatabaseInterface, Handler):
 
     def all(self):
         return self.app.db.query(Instance)
+
+
+class VulnerabilityHandler(DatabaseInterface, Handler):
+    class Meta:
+        label = 'vulnerability'
+
+    def delete(self, vid: int):
+        return self.app.db.delete(Vulnerability, vid)
+
+    def get(self, vid: int):
+        return self.app.db.query(Vulnerability, vid)
+
+    def all(self):
+        return self.app.db.query(Vulnerability)
 
 
 class MetadataHandler(DatabaseInterface, Handler):

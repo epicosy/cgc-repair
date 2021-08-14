@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 
+import yaml
 from sqlalchemy.exc import OperationalError
 
 from cgcrepair.core.exc import CGCRepairError
-from cgcrepair.core.handlers.database import Metadata, Database
+from cgcrepair.core.handlers.database import Metadata, Database, Vulnerability
 from cgcrepair.utils.data import Tools
 
 
@@ -31,6 +32,9 @@ def init_metadata(app):
             challenges = corpus_handler.get_challenges()
             challenges_count = len(challenges)
 
+            with open(app.config.get_config("metadata")) as mp:
+                yaml_metadata = yaml.load(mp, Loader=yaml.FullLoader)
+
             for i, challenge_name in enumerate(challenges):
                 app.log.info(f"Processing {challenge_name} for metadata. {i}/{challenges_count}")
                 challenge = corpus_handler.get(challenge_name)
@@ -47,6 +51,16 @@ def init_metadata(app):
                     continue
 
                 database.add(metadata)
+
+                if metadata.id in yaml_metadata:
+                    for pov, pov_metadata in yaml_metadata[metadata.id]['pov'].items():
+                        if 'related' in pov_metadata:
+                            related = ';'.join([str(r) for r in pov_metadata['related']])
+                        else:
+                            related = None
+                        vuln = Vulnerability(id=f"{metadata.id}_{pov}", cid=metadata.id, cwe=pov_metadata['cwe'],
+                                             related=related, test=f"n{pov}")
+                        database.add(vuln)
 
         app.extend('db', database)
 

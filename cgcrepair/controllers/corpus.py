@@ -84,35 +84,6 @@ class Corpus(Controller):
             self.app.log.error(genpovs_handler.error)
 
     @ex(
-        help='Queries the (number of) positive and negative tests.',
-        arguments=[
-            (['--pos'], {'help': "Flag for only positive tests (Polls).", 'required': False, 'action': 'store_true'}),
-            (['--neg'], {'help': "Flag for only negative tests (POVs).", 'required': False, 'action': 'store_true'}),
-            (['--count'], {'help': "Prints the count of the tests.", 'required': False, 'action': 'store_true'})
-        ]
-    )
-    def tests(self):
-        challenge = self.get_challenge()
-        tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
-
-        # TODO: use jinja templates instead of prints
-        if self.app.pargs.neg:
-            if self.app.pargs.count:
-                print(len(tests.neg_tests))
-            else:
-                print(' '.join(tests.neg_tests.keys()))
-        elif self.app.pargs.pos:
-            if self.app.pargs.count:
-                print(len(tests.pos_tests))
-            else:
-                print(' '.join(tests.pos_tests.keys()))
-        else:
-            if self.app.pargs.count:
-                print(len(tests.pos_tests), len(tests.neg_tests))
-            else:
-                print(' '.join(tests.pos_tests.keys()), ' '.join(tests.neg_tests.keys()))
-
-    @ex(
         help="Returns the vulnerable files.",
         arguments=[
             (['--path'], {'help': "Manifest is saved under the path or to the file specified.", 'required': False,
