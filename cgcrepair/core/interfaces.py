@@ -28,6 +28,7 @@ class DatabaseInterface(Interface):
     class Meta:
         interface = 'database'
 
+
 class RunnerInterface(Interface):
     class Meta:
         interface = 'runner'

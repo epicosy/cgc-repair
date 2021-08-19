@@ -34,13 +34,11 @@ class YamlConfigurations(YamlConfigHandler):
         corpus = self.get_config('corpus')
         tools = self.get_config('tools')
         polls = self.get_config('polls')
-        gcov = self.get_config('gcov')
         python2 = self.get_config('python2')
         # povs = self.get_config('polls')
 
         assert corpus, key_not_found_msg('corpus')
         assert python2, key_not_found_msg('python2')
-        assert gcov, key_not_found_msg('gcov')
         assert tools, key_not_found_msg('tools')
         assert polls, key_not_found_msg('polls')
         # assert povs, key_not_found_msg('povs')
@@ -51,7 +49,6 @@ class YamlConfigurations(YamlConfigHandler):
         assert cwe_level, key_not_found_msg('cwe_level')
 
         assert Path(corpus).exists(), f'Corpus path {corpus} not found'
-        assert which(gcov) is not None, f'GCOV executable {gcov} not found in PATH'
         assert which(python2) is not None, f'Python2 executable {python2} not found in PATH'
         assert Path(tools).exists(), f'Tools path {tools} not found'
         assert Path(polls).exists(), f'Polls path {polls} not found'

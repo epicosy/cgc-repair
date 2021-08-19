@@ -57,5 +57,10 @@ USER root
 ################################
 RUN python3 -m pip install --no-cache-dir -r requirements.txt && python3 setup.py install
 
+
+################################
+######### Prepare env ##########
+################################
+RUN /etc/init.d/postgresql start
 WORKDIR /
 #ENTRYPOINT ["cgcrepair"]
