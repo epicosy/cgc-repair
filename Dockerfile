@@ -39,7 +39,7 @@ COPY . /cgc-repair
 RUN mkdir -p $TOOLS_PATH && cp -r tools/* $TOOLS_PATH && cp "tools/cwe_dict.csv" "/usr/local/share" && \
     mkdir -p $CONFIG_PATH && cp "config/cgcrepair.yml" $CONFIG_PATH &&  mkdir -p "/cores" && \
     mkdir -p "/usr/local/share/polls" && mkdir -p "/usr/local/lib/cgc/polls" && mkdir -p "/usr/local/share/povs" && \
-    cp "./cmake/CMakeLists.txt" $CORPUS_PATH
+    cp "./cmake/CMakeLists.txt" $CORPUS_PATH && cp "./lib/metadata.yml" $CONFIG_PATH
 
 RUN ./scripts/install_cgc_lib.sh
 
