@@ -84,3 +84,37 @@ class Task(Controller):
         else:
             print(' '.join(tests.pos_tests.keys()))
             print(' '.join(tests.neg_tests.keys()))
+
+    @ex(
+        help='Generates the Polls and POVs for the challenges in the metadata.',
+        arguments=[
+            (['-n', '--count'], {'type': int, 'default': 10, 'help': 'Number of polls to generate.'}),
+            (['--m32'], {'action': 'store_true', 'help': 'Flag for compiling for 32 bit arch.'}),
+            (['--threads'], {'type': int, 'default': 2, 'help': 'Number of threads to use.'})
+        ]
+    )
+    def generate(self):
+        genpovs_handler = self.app.handler.get('commands', 'genpovs', setup=True)
+        genpovs_handler.set(m32=True if self.app.pargs.m32 else False)
+
+        genpolls_handler = self.app.handler.get('commands', 'genpolls', setup=True)
+        genpolls_handler.set()
+
+        vuln_handler = self.app.handler.get('database', 'vulnerability', setup=True)
+        metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+        runner_handler = self.app.handler.get('runner', 'runner', setup=True)
+        tasks = []
+        challenges = []
+        for v in vuln_handler.all():
+            metadata = metadata_handler.get(v.cid)
+            if metadata.name in challenges:
+                continue
+            challenge = corpus_handler.get(metadata.name)
+            tasks.append(TaskData(run_args={'challenge': challenge}, commands_handler=genpovs_handler))
+            tasks.append(TaskData(run_args={'challenge': challenge, 'count': self.app.pargs.count},
+                                  commands_handler=genpolls_handler))
+            challenges.append(metadata.name)
+
+        results = runner_handler(tasks=tasks, threads=self.app.pargs.threads)
+        print(results)

@@ -2,10 +2,13 @@ from dataclasses import dataclass, field
 from typing import List, AnyStr, Any, Dict
 from datetime import datetime
 
+from cgcrepair.core.handlers.commands import CommandsHandler
+
 
 @dataclass
 class TaskData:
     run_args: Dict[AnyStr, Any]
+    commands_handler: CommandsHandler
     run_ret: Any = None
     status: str = None
     start_date: datetime = None

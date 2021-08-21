@@ -6,6 +6,7 @@ ENV CORPUS_PATH="/usr/local/src/cgc"
 ENV TMP_DIR="/tmp/cb-multios"
 ENV TOOLS_PATH="/usr/local/share/pyshared/cgc"
 ENV CONFIG_PATH="/etc/cgcrepair"
+ARG threads=4
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -61,6 +62,6 @@ RUN python3 -m pip install --no-cache-dir -r requirements.txt && python3 setup.p
 ################################
 ######### Prepare env ##########
 ################################
-RUN /etc/init.d/postgresql start
-WORKDIR /
+RUN /etc/init.d/postgresql start && cgcrepair task generate --threads $threads
+# WORKDIR /
 #ENTRYPOINT ["cgcrepair"]
