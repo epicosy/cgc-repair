@@ -6,7 +6,7 @@ from typing import Union, Dict, Any, Callable, List
 from cement import Handler
 from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, declarative_base, relationship
+from sqlalchemy.orm import Session, declarative_base, relationship, joinedload
 from sqlalchemy import inspect
 from sqlalchemy import MetaData
 
@@ -84,10 +84,13 @@ class Vulnerability(Base):
     __tablename__ = "vulnerability"
 
     id = Column('id', String, primary_key=True)
-    cid = Column('cid', String, ForeignKey('metadata.id'), nullable=False)
+    #cid = Column('cid', String, ForeignKey('metadata.id'), nullable=False)
     cwe = Column('cwe', Integer, nullable=False)
     test = Column('test', String, nullable=False)
     related = Column('related', String)
+
+    def __str__(self):
+        return f"{self.id} | {self.cwe} | {self.test} | {self.related}"
 
 
 class Metadata(Base):
@@ -102,6 +105,8 @@ class Metadata(Base):
     vuln_files = Column('vuln_files', Integer)
     main_cwe = Column('main_cwe', String)
     povs = Column('povs', Integer)
+    vid = Column('vid', String, ForeignKey('vulnerability.id'), nullable=False)
+    vulnerability = relationship("Vulnerability", foreign_keys=[vid])
 
     def __str__(self):
         return f"{self.id} | {self.name} | {self.main_cwe} | {self.povs} | {self.total_lines} | {self.vuln_lines} | " \
@@ -198,7 +203,7 @@ class MetadataHandler(DatabaseInterface, Handler):
         return metadata
 
     def get(self, cid: str):
-        return self.app.db.query(Metadata, cid)
+        return self.app.db.query(Metadata, cid, load='vulnerability')
 
     def all(self):
         return self.app.db.query(Metadata)
@@ -241,15 +246,21 @@ class Database:
         inspector = inspect(self.engine)
         return inspector.reflect_table(name, None)
 
-    def query(self, entity: Base, entity_id: Union[int, str] = None):
+    def query(self, entity: Base, entity_id: Union[int, str] = None, load: str = None):
         with Session(self.engine) as session, session.begin():
-            if entity_id and hasattr(entity, 'id'):
-                results = session.query(entity).filter(entity.id == entity_id).first()
+            if load:
+                query = session.query(entity).options(joinedload(load))
             else:
-                results = session.query(entity).all()
+                query = session.query(entity)
+
+            if entity_id and hasattr(entity, 'id'):
+                query = query.filter(entity.id == entity_id).first()
+            else:
+                query = query.all()
 
             session.expunge_all()
-            return results
+
+            return query
 
     def query_attr(self, entity: Base, entity_id: int, attr: str):
         with Session(self.engine) as session, session.begin():

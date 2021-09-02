@@ -59,7 +59,7 @@ class Database(Controller):
         challenge = corpus_handler.get(metadata.name)
         manifest = Manifest(source_path=challenge.paths.source)
 
-        print(f"{metadata.id}\n{metadata.name}\n{metadata.main_cwe}\n{' '.join(manifest.vuln_files.keys())}")
+        print(f"{metadata.id}\n{metadata.name}\n{metadata.vulnerability}\n{' '.join(manifest.vuln_files.keys())}")
 
     @ex(
         help='Lists specified table in the database.',
