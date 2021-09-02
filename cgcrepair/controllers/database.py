@@ -3,6 +3,7 @@ from tabulate import tabulate
 from cement import Controller, ex
 from argparse import ArgumentTypeError
 from cgcrepair.core.corpus.cwe_parser import CWEParser
+from cgcrepair.core.corpus.manifest import Manifest
 from cgcrepair.core.exc import CGCRepairError
 from cgcrepair.core.handlers.database import Sanity
 
@@ -44,6 +45,21 @@ class Database(Controller):
 
         if res in ["Yes", "Y", "y", "yes"]:
             self.app.db.destroy()
+
+    @ex(
+        help='Lists specified table in the database.',
+        arguments=[
+            (['--cid'], {'help': 'The challenge id.', 'type': str, 'required': True})
+        ]
+    )
+    def metadata(self):
+        metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+        corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
+        metadata = metadata_handler.get(self.app.pargs.cid)
+        challenge = corpus_handler.get(metadata.name)
+        manifest = Manifest(source_path=challenge.paths.source)
+
+        print(f"{metadata.id}\n{metadata.name}\n{metadata.main_cwe}\n{' '.join(manifest.vuln_files.keys())}")
 
     @ex(
         help='Lists specified table in the database.',
