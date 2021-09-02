@@ -5,7 +5,7 @@ from argparse import ArgumentTypeError
 from cgcrepair.core.corpus.cwe_parser import CWEParser
 from cgcrepair.core.corpus.manifest import Manifest
 from cgcrepair.core.exc import CGCRepairError
-from cgcrepair.core.handlers.database import Sanity
+from cgcrepair.core.handlers.database import Sanity, Metadata
 
 
 def check_min(x):
@@ -164,32 +164,42 @@ class Database(Controller):
 
     @ex(
         help="List the benchmark's CWEs",
-        arguments=[(['-w'], {'help': 'Flag to print without formatting.', 'action': 'store_true', 'required': False})]
+        arguments=[(['-w'], {'help': 'Flag to print without formatting.', 'action': 'store_true', 'required': False}),
+                   (['--vid'], {'help': 'The vulnerability id.', 'type': str, 'required': False})
+                   ]
     )
     def vulns(self):
         metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
-        metadata = metadata_handler.all()
-        table = []
 
-        with open(self.app.config.get_config("metadata")) as mp:
-            yaml_metadata = yaml.load(mp, Loader=yaml.FullLoader)
+        if self.app.pargs.vid:
+            metadata = self.app.db.filter(Metadata, {Metadata.vid: lambda iid: iid == self.app.pargs.vid}).first()
 
-        for m in metadata:
-            row = []
-            if m.id in yaml_metadata:
-                for pov, pov_metadata in yaml_metadata[m.id]['pov'].items():
-                    row = [pov_metadata['cwe'], m.id, m.name, f"{m.id}_{pov}", str(pov_metadata['related']) if 'related' in pov_metadata else '-']
-                    if self.app.pargs.w:
-                        print('\t'.join([str(el) for el in row]))
+            print(f"{metadata.vulnerability.cwe} {metadata.id} {metadata.name} {metadata.vulnerability.id} {metadata.vulnerability.related}")
+
+        else:
+            metadata = metadata_handler.all()
+            table = []
+
+            with open(self.app.config.get_config("metadata")) as mp:
+                yaml_metadata = yaml.load(mp, Loader=yaml.FullLoader)
+
+            for m in metadata:
+                row = []
+                if m.id in yaml_metadata:
+                    for pov, pov_metadata in yaml_metadata[m.id]['pov'].items():
+                        row = [pov_metadata['cwe'], m.id, m.name, f"{m.id}_{pov}",
+                               str(pov_metadata['related']) if 'related' in pov_metadata else '-']
+                        if self.app.pargs.w:
+                            print('\t'.join([str(el) for el in row]))
+                        table.append(row)
+                else:
+                    row = ['-', m.id, m.name, '-', '-']
                     table.append(row)
-            else:
-                row = ['-', m.id, m.name, '-', '-']
-                table.append(row)
 
-            if self.app.pargs.w:
-                print('\t'.join([str(el) for el in row]))
-        if not self.app.pargs.w:
-            print(tabulate(table, headers=['CWE', 'Challenge Id', 'Challenge Name', 'POV Id', 'Related']))
+                if self.app.pargs.w:
+                    print('\t'.join([str(el) for el in row]))
+            if not self.app.pargs.w:
+                print(tabulate(table, headers=['CWE', 'Challenge Id', 'Challenge Name', 'POV Id', 'Related']))
 
     @ex(
         help='Lists outcomes for a specific instance.',
