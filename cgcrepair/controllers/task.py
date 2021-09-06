@@ -60,23 +60,21 @@ class Task(Controller):
         help='Queries the (number of) positive and negative tests.',
         arguments=[
             (['--count'], {'help': "Prints the count of the tests.", 'required': False, 'action': 'store_true'}),
-            (['--vid'], {'help': 'The vulnerability id.', 'type': str, 'required': True})
+            (['--cid'], {'help': 'The vulnerability id.', 'type': str, 'required': True})
         ]
     )
-    def triplet(self):
-        vuln_handler = self.app.handler.get('database', 'vulnerability', setup=True)
+    def tests(self):
         corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
         metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
-        vuln = vuln_handler.get(self.app.pargs.vid)
+        metadata = metadata_handler.get(self.app.pargs.cid)
 
-        if not vuln:
-            self.app.log.warning(f"Vulnerability {self.app.pargs.vid} not found.")
+        if not metadata:
+            self.app.log.warning(f"Challenge {self.app.pargs.cid} not found.")
             return
 
-        metadata = metadata_handler.get(vuln.cid)
         challenge = corpus_handler.get(metadata.name)
         tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
-        print(vuln.cid)
+
         # TODO: use jinja templates instead of prints
         if self.app.pargs.count:
             print(len(tests.pos_tests))
