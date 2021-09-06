@@ -62,6 +62,6 @@ RUN python3 -m pip install --no-cache-dir -r requirements.txt && python3 setup.p
 ################################
 ######### Prepare env ##########
 ################################
-#RUN /etc/init.d/postgresql start && cgcrepair task generate --threads $threads
+RUN /etc/init.d/postgresql start && cgcrepair task generate --threads $threads
 # WORKDIR /
 #ENTRYPOINT ["cgcrepair"]

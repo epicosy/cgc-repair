@@ -60,7 +60,7 @@ class Task(Controller):
         help='Queries the (number of) positive and negative tests.',
         arguments=[
             (['--count'], {'help': "Prints the count of the tests.", 'required': False, 'action': 'store_true'}),
-            (['--cid'], {'help': 'The vulnerability id.', 'type': str, 'required': True})
+            (['--cid'], {'help': 'The challenge id.', 'type': str, 'required': True})
         ]
     )
     def tests(self):
@@ -98,14 +98,13 @@ class Task(Controller):
         genpolls_handler = self.app.handler.get('commands', 'genpolls', setup=True)
         genpolls_handler.set()
 
-        vuln_handler = self.app.handler.get('database', 'vulnerability', setup=True)
         metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
         corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
         runner_handler = self.app.handler.get('runner', 'runner', setup=True)
         tasks = []
         challenges = []
-        for v in vuln_handler.all():
-            metadata = metadata_handler.get(v.cid)
+
+        for metadata in metadata_handler.all():
             if metadata.name in challenges:
                 continue
             challenge = corpus_handler.get(metadata.name)
