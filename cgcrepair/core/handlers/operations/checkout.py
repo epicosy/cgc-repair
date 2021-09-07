@@ -46,7 +46,8 @@ class CheckoutHandler(CommandsHandler):
             with (working_dir / '.instance_id').open(mode='w') as oid:
                 oid.write(str(_id))
 
-            print(f"Checked out {challenge.name} with id {_id}")
+            print(f"Checked out {challenge.name}.")
+            print(f"Id: {_id}\nWorking directory: {working_dir}")
 
             return _id
 
