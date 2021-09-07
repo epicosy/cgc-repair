@@ -61,7 +61,7 @@ class CompileHandler(MakeHandler):
                                  cmd_cwd=str(working.build_root))
                 self.app.log.info(f"Compiled {instance.name}.")
 
-            print(f"Build path: {working.cmake}.")
+            print(f"Build path: {working.cmake}")
 
         except CommandError as ce:
             self.error = str(ce)
