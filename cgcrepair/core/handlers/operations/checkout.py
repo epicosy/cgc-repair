@@ -19,10 +19,12 @@ class CheckoutHandler(CommandsHandler):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def set(self, no_patch: bool = False, working_dir: str = None, seed: int = None, force: bool = False):
+    def set(self, no_patch: bool = False, working_dir: str = None, root_dir: str = None, seed: int = None,
+            force: bool = False):
         super().set()
         self.no_patch = no_patch
         self.working_dir = working_dir
+        self.root_dir = root_dir
         self.seed = seed
         self.force = force
 
@@ -65,7 +67,8 @@ class CheckoutHandler(CommandsHandler):
             if not self.seed:
                 self.seed = b2a_hex(urandom(2)).decode()
 
-            working_dir = Path(self.app.config.get_config('working_dir'), f"{challenge.name}_{self.seed}")
+            working_dir = Path(self.root_dir if self.root_dir else self.app.config.get_config('root_dir'),
+                               f"{challenge.name}_{self.seed}")
 
         self.app.log.info(f"Checking out {challenge.name} to {working_dir}.")
 

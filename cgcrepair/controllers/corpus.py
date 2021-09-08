@@ -3,7 +3,6 @@ from cement import Controller, ex
 from cgcrepair.core.corpus.challenge import Challenge
 from cgcrepair.core.corpus.manifest import Manifest
 from cgcrepair.core.exc import CGCRepairError
-from cgcrepair.core.tests import Tests
 
 
 class Corpus(Controller):
@@ -37,6 +36,8 @@ class Corpus(Controller):
               'dest': 'no_patch'}),
             (['-wd', '--working_directory'], {'help': 'The working directory.', 'type': str, 'required': False,
                                               'dest': 'working_dir'}),
+            (['-rd', '--root_dir'], {'help': 'The root directory used for the working directory.', 'type': str,
+                                     'required': False}),
             (['-S', '--seed'], {'help': "Random seed", 'required': False, 'type': int}),
             (['-F', '--force'], {'help': "Forces to checkout to existing directory", 'required': False,
                                  'action': 'store_true'})
@@ -46,7 +47,7 @@ class Corpus(Controller):
         challenge = self.get_challenge()
         checkout_handler = self.app.handler.get('commands', 'checkout', setup=True)
         checkout_handler.set(no_patch=self.app.pargs.no_patch, working_dir=self.app.pargs.working_dir,
-                             seed=self.app.pargs.seed, force=self.app.pargs.force)
+                             seed=self.app.pargs.seed, force=self.app.pargs.force, root_dir=self.app.pargs.root_dir)
         checkout_handler.run(challenge)
 
         if checkout_handler.error:

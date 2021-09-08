@@ -38,7 +38,7 @@ cgcrepair:
 
 ### Output
   plots: './plots'
-  working_dir: '/tmp'
+  root_dir: '/tmp'
 
 ### CWE Parsing
   cwe_level: 3
