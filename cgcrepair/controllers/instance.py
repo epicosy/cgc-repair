@@ -104,7 +104,7 @@ class Instance(Controller):
         compile_handler.set(coverage=self.app.pargs.coverage, fix_files=self.app.pargs.fix_files, tag=self.app.pargs.tag,
                             inst_files=self.app.pargs.inst_files, backup=self.app.pargs.backup, link=self.app.pargs.link,
                             replace=self.app.pargs.replace, save_temps=self.app.pargs.save_temps,
-                            write_build_args=self.app.pargs.write_build_args,
+                            cpp_files=self.app.pargs.cpp_files, write_build_args=self.app.pargs.write_build_args,
                             compiler_trail_path=self.app.pargs.compiler_trail_path)
         compile_handler.run(self.instance, self.working)
         compile_handler.save_outcome(self.instance)
