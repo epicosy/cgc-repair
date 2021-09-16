@@ -94,7 +94,7 @@ class TestHandler(CommandsHandler):
             # Invert negative test's result
             test_outcome.result = not test_outcome.result
 
-            if test_outcome.result:
+            if not test_outcome.result:
                 self.failed = True
 
         if self.print_ids and test_outcome.result:

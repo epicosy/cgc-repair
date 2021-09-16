@@ -77,6 +77,7 @@ class Instance(Controller):
 
         if make_handler.error:
             self.app.log.error(make_handler.error)
+            exit(1)
 
     @ex(
         help='Compiles challenge binary.',
@@ -110,6 +111,7 @@ class Instance(Controller):
 
         if compile_handler.error:
             self.app.log.error(compile_handler.error)
+            exit(1)
 
     @ex(
         help='Runs specified tests against challenge binary.',
@@ -147,6 +149,7 @@ class Instance(Controller):
 
         if (test_handler.error or test_handler.failed) and self.app.pargs.exit_fail:
             exit(1)
+        exit(0)
 
     @ex(
         help='Applies a patch file to an instance\'s source file.',
