@@ -64,10 +64,11 @@ class CommandsHandler(CommandsInterface, Handler):
     def __call__(self, cmd_str: Union[AnyStr, List[AnyStr]], cmd_cwd: str = None, msg: str = None, timeout: int = None,
                  raise_err: bool = False, exit_err: bool = False):
 
-        if msg and self.app.pargs.verbose:
+        if msg:
             self.app.log.info(msg)
 
-        self.app.log.debug(cmd_str, cmd_cwd)
+        if self.app.pargs.verbose:
+            self.app.log.debug(cmd_str, cmd_cwd)
 
         # based on https://stackoverflow.com/a/28319191
         with subprocess.Popen(args=cmd_str, shell=isinstance(cmd_str, str), stdout=subprocess.PIPE,
