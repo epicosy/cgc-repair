@@ -51,16 +51,18 @@ def init_metadata(app):
                     continue
 
                 if metadata.id in yaml_metadata:
+                    database.add(metadata)
+
                     for pov, pov_metadata in yaml_metadata[metadata.id]['pov'].items():
                         if 'related' in pov_metadata:
                             related = ';'.join([str(r) for r in pov_metadata['related']])
                         else:
                             related = None
-                        vuln = Vulnerability(id=f"{metadata.id}_{pov}", cwe=pov_metadata['cwe'], related=related,
-                                             test=f"n{pov}")
+                        vuln = Vulnerability(id=f"{metadata.id}_{pov}", cid=metadata.id, cwe=pov_metadata['cwe'],
+                                             related=related, test=f"n{pov}")
 
-                        metadata.vid = database.add(vuln)
-                        database.add(metadata)
+                        database.add(vuln)
+                        #database.update(Metadata, metadata.id, 'vid', vid)
 
         app.extend('db', database)
 

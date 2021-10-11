@@ -6,6 +6,7 @@ from cgcrepair.core.corpus.cwe_parser import CWEParser
 from cgcrepair.core.corpus.manifest import Manifest
 from cgcrepair.core.exc import CGCRepairError
 from cgcrepair.core.handlers.database import Sanity, Metadata
+from cgcrepair.core.tests import Tests
 
 
 def check_min(x):
@@ -49,17 +50,28 @@ class Database(Controller):
     @ex(
         help='Lists specified table in the database.',
         arguments=[
-            (['--cid'], {'help': 'The challenge id.', 'type': str, 'required': True})
+            (['--cid'], {'help': 'The challenge id.', 'type': str, 'required': False})
         ]
     )
     def metadata(self):
         metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+        vuln_handler = self.app.handler.get('database', 'vulnerability', setup=True)
         corpus_handler = self.app.handler.get('corpus', 'corpus', setup=True)
-        metadata = metadata_handler.get(self.app.pargs.cid)
-        challenge = corpus_handler.get(metadata.name)
-        manifest = Manifest(source_path=challenge.paths.source)
 
-        print(f"{metadata.id}\n{metadata.name}\n{metadata.vulnerability}\n{' '.join(manifest.vuln_files.keys())}")
+        if self.app.pargs.cid:
+            metadata = [metadata_handler.get(self.app.pargs.cid)]
+        else:
+            metadata = metadata_handler.all()
+
+        for met in metadata:
+            data = {'id': met.id, 'name': met.name}
+            challenge = corpus_handler.get(met.name)
+            tests = Tests(polls_path=challenge.paths.polls, povs_path=challenge.paths.povs)
+            manifest = Manifest(source_path=challenge.paths.source)
+            data['tests'] = list(tests.pos_tests.keys())
+            data['vulns'] = [vuln.id for vuln in vuln_handler.find(met.id)]
+            data['manifest'] = list(manifest.vuln_files.keys())
+            print(data)
 
     @ex(
         help='Lists specified table in the database.',
@@ -164,42 +176,24 @@ class Database(Controller):
 
     @ex(
         help="List the benchmark's CWEs",
-        arguments=[(['-w'], {'help': 'Flag to print without formatting.', 'action': 'store_true', 'required': False}),
-                   (['--vid'], {'help': 'The vulnerability id.', 'type': str, 'required': False})
-                   ]
+        arguments=[(['--vid'], {'help': 'The vulnerability id.', 'type': str, 'required': False})]
     )
     def vulns(self):
         metadata_handler = self.app.handler.get('database', 'metadata', setup=True)
+        vuln_handler = self.app.handler.get('database', 'vulnerability', setup=True)
 
         if self.app.pargs.vid:
-            metadata = self.app.db.filter(Metadata, {Metadata.vid: lambda iid: iid == self.app.pargs.vid}).first()
+            vuln = vuln_handler.get(self.app.pargs.vid)
 
-            print(f"{metadata.vulnerability.cwe} {metadata.id} {metadata.name} {metadata.vulnerability.id} {metadata.vulnerability.related}")
+            if vuln:
+                print({'id': vuln.id, 'cid': vuln.cid, 'test': vuln.test, 'cwe': vuln.cwe,
+                       'related': vuln.related if vuln.related else ""})
 
         else:
-            metadata = metadata_handler.all()
-            table = []
-
-            with open(self.app.config.get_config("metadata")) as mp:
-                yaml_metadata = yaml.load(mp, Loader=yaml.FullLoader)
-
-            for m in metadata:
-                row = []
-                if m.id in yaml_metadata:
-                    for pov, pov_metadata in yaml_metadata[m.id]['pov'].items():
-                        row = [pov_metadata['cwe'], m.id, m.name, f"{m.id}_{pov}",
-                               str(pov_metadata['related']) if 'related' in pov_metadata else '-']
-                        if self.app.pargs.w:
-                            print('\t'.join([str(el) for el in row]))
-                        table.append(row)
-                else:
-                    row = ['-', m.id, m.name, '-', '-']
-                    table.append(row)
-
-                if self.app.pargs.w:
-                    print('\t'.join([str(el) for el in row]))
-            if not self.app.pargs.w:
-                print(tabulate(table, headers=['CWE', 'Challenge Id', 'Challenge Name', 'POV Id', 'Related']))
+            for m in metadata_handler.all():
+                for vuln in vuln_handler.find(m.id):
+                    print({'id': vuln.id, 'cid': vuln.cid, 'test': vuln.test, 'cwe': vuln.cwe,
+                           'related': vuln.related if vuln.related else ""})
 
     @ex(
         help='Lists outcomes for a specific instance.',

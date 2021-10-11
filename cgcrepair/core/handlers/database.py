@@ -1,14 +1,13 @@
 import contextlib
 
 from pathlib import Path
-from typing import Union, Dict, Any, Callable, List
+from typing import Union, Dict, Any, Callable
 
 from cement import Handler
 from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, relationship, joinedload
 from sqlalchemy import inspect
-from sqlalchemy import MetaData
 
 
 from cgcrepair.core.corpus.challenge import Challenge
@@ -84,7 +83,7 @@ class Vulnerability(Base):
     __tablename__ = "vulnerability"
 
     id = Column('id', String, primary_key=True)
-    #cid = Column('cid', String, ForeignKey('metadata.id'), nullable=False)
+    cid = Column('cid', String, ForeignKey('metadata.id'), nullable=False)
     cwe = Column('cwe', Integer, nullable=False)
     test = Column('test', String, nullable=False)
     related = Column('related', String)
@@ -105,8 +104,8 @@ class Metadata(Base):
     vuln_files = Column('vuln_files', Integer)
     main_cwe = Column('main_cwe', String)
     povs = Column('povs', Integer)
-    vid = Column('vid', String, ForeignKey('vulnerability.id'), nullable=False)
-    vulnerability = relationship("Vulnerability", foreign_keys=[vid])
+    #vid = Column('vid', String, ForeignKey('vulnerability.id'), nullable=True)
+    #vulnerability = relationship("Vulnerability", foreign_keys=[vid])
 
     def __str__(self):
         return f"{self.id} | {self.name} | {self.main_cwe} | {self.povs} | {self.total_lines} | {self.vuln_lines} | " \
@@ -169,11 +168,14 @@ class VulnerabilityHandler(DatabaseInterface, Handler):
     class Meta:
         label = 'vulnerability'
 
-    def delete(self, vid: int):
+    def delete(self, vid: str):
         return self.app.db.delete(Vulnerability, vid)
 
-    def get(self, vid: int):
+    def get(self, vid: str):
         return self.app.db.query(Vulnerability, vid)
+
+    def find(self, cid: str):
+        return self.app.db.filter(Vulnerability, {Vulnerability.cid: lambda v_cid: v_cid == cid}).all()
 
     def all(self):
         return self.app.db.query(Vulnerability)
@@ -203,7 +205,7 @@ class MetadataHandler(DatabaseInterface, Handler):
         return metadata
 
     def get(self, cid: str):
-        return self.app.db.query(Metadata, cid, load='vulnerability')
+        return self.app.db.query(Metadata, cid)
 
     def all(self):
         return self.app.db.query(Metadata)
