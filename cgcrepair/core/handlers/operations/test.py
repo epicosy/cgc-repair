@@ -1,11 +1,12 @@
 import os
 import binascii
+import fileinput
 
 from pathlib import Path
 
 from cgcrepair.core.handlers.database import TestOutcome, Instance
 from cgcrepair.utils.parse.test_result import get_outcome, get_pids_sig, pov_signals
-from cgcrepair.utils.helpers import kill_by_name
+from cgcrepair.utils.helpers import kill_by_name, collect_files
 
 from cgcrepair.core.exc import CommandError
 from cgcrepair.core.handlers.commands import CommandsHandler
@@ -45,6 +46,7 @@ class TestHandler(CommandsHandler):
                                  msg=f"Testing {test.name} on {test.file.name}\n")
 
                 test_outcome = self._process_result(test, challenge_name=challenge_paths.name)
+                self.coverage(working)
                 test_outcome.instance_id = instance.id
                 test_outcome.co_id = instance.pointer
                 test_outcome.duration = round(self.duration, 3)
@@ -141,3 +143,28 @@ class TestHandler(CommandsHandler):
             return
         with out_file.open(mode="a") as of:
             of.write(f"{test_outcome.name} {test_outcome.result}\n")
+
+    def coverage(self, working: WorkingPaths):
+        # copies coverage file generated to coverage dir with respective name
+
+        if self.app.pargs.cov_out_dir:
+            out_dir = Path(self.app.pargs.cov_out_dir)
+            cov_dir = Path(self.app.pargs.cov_dir) if self.app.pargs.cov_dir else working.cmake
+
+            for file in collect_files(cov_dir, self.app.pargs.cov_suffix):
+                in_file = cov_dir / file
+                out_path = out_dir / file.parent
+                out_file = out_path / Path(file.name)
+
+                if not out_path.exists():
+                    out_path.mkdir(parents=True, exist_ok=True)
+
+                if in_file.exists():
+                    concat_file = Path(file.stem + self.app.pargs.rename_suffix) if self.app.pargs.rename_suffix else Path(out_file)
+                    concat_file = out_path / concat_file
+
+                    with concat_file.open(mode="a") as fout, fileinput.input(in_file) as fin:
+                        for line in fin:
+                            fout.write(line)
+                    # delete the file generated
+                    in_file.unlink()

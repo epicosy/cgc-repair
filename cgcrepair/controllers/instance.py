@@ -35,6 +35,16 @@ print_group.add_argument('-PI', '--print_ids', help='Flag for printing the list 
 print_group.add_argument('-P', '--print_class', help='Flag for printing testcases outcome as PASS/FAIL.',
                          action='store_true')
 
+cov_group = argparse_handler.add_argument_group(title="coverage", description="None")
+cov_group.add_argument('-cd', '--cov_dir', type=str, help='The dir where the coverage files are generated.',
+                       default=None)
+cov_group.add_argument('-cod', '--cov_out_dir', type=str, help='The dir where the coverage files are output.',
+                       default=None)
+cov_group.add_argument('-cs', '--cov_suffix', type=str, help='The suffix of the coverage files generated.',
+                       default=".path")
+cov_group.add_argument('-rs', '--rename_suffix', type=str, default=".path",
+                       help='Rename the suffix to a specific one when outputting files')
+
 
 class Instance(Controller):
     class Meta:
@@ -101,8 +111,10 @@ class Instance(Controller):
     )
     def compile(self):
         compile_handler = self.app.handler.get('commands', 'compile', setup=True)
-        compile_handler.set(coverage=self.app.pargs.coverage, fix_files=self.app.pargs.fix_files, tag=self.app.pargs.tag,
-                            inst_files=self.app.pargs.inst_files, backup=self.app.pargs.backup, link=self.app.pargs.link,
+        compile_handler.set(coverage=self.app.pargs.coverage, fix_files=self.app.pargs.fix_files,
+                            tag=self.app.pargs.tag,
+                            inst_files=self.app.pargs.inst_files, backup=self.app.pargs.backup,
+                            link=self.app.pargs.link,
                             replace=self.app.pargs.replace, save_temps=self.app.pargs.save_temps,
                             cpp_files=self.app.pargs.cpp_files, write_build_args=self.app.pargs.write_build_args,
                             compiler_trail_path=self.app.pargs.compiler_trail_path)
